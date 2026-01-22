@@ -1,0 +1,49 @@
+@import 'tailwindcss';
+@plugin 'tailwindcss-react-aria-components';
+@import '@fontsource/bungee';
+
+@theme {
+  --font-display: 'Bungee', system-ui;
+
+  --radius: var(--radius-xl);
+
+  --color-gray-1: oklch(0.96 0 0);
+  --color-gray-2: oklch(0.946 0 0);
+  --color-gray-3: oklch(0.918 0 0);
+  --color-gray-4: oklch(0.892 0 0);
+  --color-gray-5: oklch(0.867 0 0);
+  --color-gray-6: oklch(0.841 0 0);
+  --color-gray-7: oklch(0.805 0 0);
+  --color-gray-8: oklch(0.744 0 0);
+  --color-gray-9: oklch(0.59 0 0);
+  --color-gray-10: oklch(0.556 0 0);
+  --color-gray-11: oklch(0.454 0 0);
+  --color-gray-12: oklch(0.24 0 0);
+  --color-gray-contrast: oklch(0 0 0);
+
+  --color-accent-1: oklch(96.2% 0.0013 257.3);
+  --color-accent-2: oklch(94.8% 0.0071 257.3);
+  --color-accent-3: oklch(92.3% 0.0153 257.3);
+  --color-accent-4: oklch(89.6% 0.0301 257.3);
+  --color-accent-5: oklch(86.1% 0.0455 257.3);
+  --color-accent-6: oklch(81.9% 0.0635 257.3);
+  --color-accent-7: oklch(76.1% 0.0773 257.3);
+  --color-accent-8: oklch(68.2% 0.1007 257.3);
+  --color-accent-9: oklch(42.9% 0.1537 257.3);
+  --color-accent-10: oklch(37.2% 0.1537 257.3);
+  --color-accent-11: oklch(46.3% 0.1537 257.3);
+  --color-accent-12: oklch(31.3% 0.0761 257.3);
+  --color-accent-contrast: oklch(100 0 0);
+}
+
+@utility elevation-1 {
+  @apply shadow-sm inset-shadow-2xs shadow-black/15 inset-shadow-black/10;
+}
+
+@utility elevation-2 {
+  @apply shadow-md inset-shadow-xs shadow-black/15 inset-shadow-black/10;
+}
+
+@utility elevation-3 {
+  @apply shadow-lg inset-shadow-sm shadow-black/15 inset-shadow-black/10;
+}
