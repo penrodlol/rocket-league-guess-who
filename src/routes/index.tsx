@@ -6,23 +6,15 @@ import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
 import * as Tooltip from '@/components/ui/tooltip';
 import { characters } from '@/data/characters';
-import { useDiscordPlayers } from '@/providers/discord.provider';
-import { createFormHook, createFormHookContexts } from '@tanstack/react-form';
+import { useDiscord } from '@/providers/discord.provider';
+import { useForm } from '@tanstack/react-form';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/')({ component: App });
 
-const { fieldContext, formContext } = createFormHookContexts();
-const { useAppForm } = createFormHook({
-  fieldComponents: { CharacterCard },
-  formComponents: {},
-  fieldContext,
-  formContext,
-});
-
 function App() {
-  const players = useDiscordPlayers();
-  const form = useAppForm({
+  const { players } = useDiscord();
+  const form = useForm({
     defaultValues: { characters: characters.map((character) => character.name) },
     onSubmit: async (values) => {
       await new Promise((resolve) => setTimeout(resolve, 2000));

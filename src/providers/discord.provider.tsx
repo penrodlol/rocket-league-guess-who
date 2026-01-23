@@ -15,9 +15,11 @@ export type DiscordUser = NonNullable<Awaited<ReturnType<typeof getDiscordUser>>
 export type DiscordPlayer = NonNullable<Awaited<ReturnType<typeof getDiscordPlayers>>['data']>[0];
 export type DiscordContextValue = {
   loading: boolean;
+  instanceId: string | null;
   user: DiscordUser | null;
   players: Array<DiscordPlayer>;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  setInstanceId: React.Dispatch<React.SetStateAction<string | null>>;
   setUser: React.Dispatch<React.SetStateAction<DiscordUser | null>>;
   setPlayers: React.Dispatch<React.SetStateAction<Array<DiscordPlayer>>>;
 };
@@ -30,25 +32,10 @@ export function useDiscord() {
   return context;
 }
 
-export function useDiscordLoading() {
-  const { loading } = useDiscord();
-  return loading;
-}
-
-export function useDiscordUser() {
-  const { user } = useDiscord();
-  if (!user) throw new Error('No Discord user found in context');
-  return user;
-}
-
-export function useDiscordPlayers() {
-  const { players } = useDiscord();
-  return players;
-}
-
 export function DiscordProvider({ children }: { children: React.ReactNode }) {
   const isDiscordSetup = useRef(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<DiscordContextValue['loading']>(true);
+  const [instanceId, setInstanceId] = useState<DiscordContextValue['instanceId'] | null>(null);
   const [user, setUser] = useState<DiscordContextValue['user'] | null>(null);
   const [players, setPlayers] = useState<DiscordContextValue['players']>([]);
 
@@ -73,6 +60,7 @@ export function DiscordProvider({ children }: { children: React.ReactNode }) {
         const playersResponse = await getDiscordPlayers();
         if (playersResponse.error) throw new Error(playersResponse.error);
 
+        setInstanceId(discord.instanceId);
         setUser(userResponse.data!);
         setPlayers(playersResponse.data!);
         setLoading(false);
@@ -104,7 +92,9 @@ export function DiscordProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <DiscordContext.Provider value={{ loading, user, players, setLoading, setUser, setPlayers }}>
+    <DiscordContext.Provider
+      value={{ loading, instanceId, user, players, setLoading, setInstanceId, setUser, setPlayers }}
+    >
       {children}
     </DiscordContext.Provider>
   );
