@@ -64,10 +64,8 @@ export const getDiscordUser = createClientOnlyFn(async (accessToken: string) => 
     const auth = await discord.commands.authenticate({ access_token: accessToken });
     if (!auth.user) return { success: false, error: GET_DISCORD_USER_ERROR };
 
-    const username = auth.user.global_name ?? `${auth.user.username}#${auth.user.discriminator}`;
-    const avatarUrl = auth.user.avatar
-      ? `${import.meta.env.VITE_DISCORD_CDN_BASE_URL}/avatars/${auth.user.id}/${auth.user.avatar}.png?size=256`
-      : `${import.meta.env.VITE_DISCORD_CDN_BASE_URL}/embed/avatars/${(BigInt(auth.user.id) >> 22n) % 6n}.png`;
+    const username = getDiscordUserName(auth.user.global_name, auth.user.username, auth.user.discriminator);
+    const avatarUrl = getDiscordUserAvatarUrl(auth.user.id, auth.user.avatar);
 
     return { success: true, data: { ...auth.user, username, avatarUrl } };
   } catch (error) {
@@ -80,13 +78,22 @@ export const getDiscordPlayers = createClientOnlyFn(async () => {
     const response = await discord.commands.getInstanceConnectedParticipants();
     const paylod = response.participants.map((participant) => ({
       ...participant,
-      username: participant.global_name ?? `${participant.username}#${participant.discriminator}`,
-      avatarUrl: participant.avatar
-        ? `${import.meta.env.VITE_DISCORD_CDN_BASE_URL}/avatars/${participant.id}/${participant.avatar}.png?size=256`
-        : `${import.meta.env.VITE_DISCORD_CDN_BASE_URL}/embed/avatars/${(BigInt(participant.id) >> 22n) % 6n}.png`,
+      username: getDiscordUserName(participant.global_name, participant.username, participant.discriminator),
+      avatarUrl: getDiscordUserAvatarUrl(participant.id, participant.avatar),
     }));
     return { success: true, data: paylod };
   } catch (error) {
     return { success: false, error: GET_DISCORD_PLAYERS_ERROR };
   }
 });
+
+export const getDiscordUserName = createClientOnlyFn(
+  (globalname: string | null | undefined, username: string, discriminator: string) =>
+    globalname ?? `${username}#${discriminator}`,
+);
+
+export const getDiscordUserAvatarUrl = createClientOnlyFn((userId: string, avatar: string | null | undefined) =>
+  avatar
+    ? `${import.meta.env.VITE_DISCORD_CDN_BASE_URL}/avatars/${userId}/${avatar}.png?size=256`
+    : `${import.meta.env.VITE_DISCORD_CDN_BASE_URL}/embed/avatars/${(BigInt(userId) >> 22n) % 6n}.png`,
+);

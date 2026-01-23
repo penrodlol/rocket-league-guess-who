@@ -3,8 +3,12 @@ import {
   getDiscordAuthorizationCode,
   getDiscordPlayers,
   getDiscordUser,
+  getDiscordUserAvatarUrl,
+  getDiscordUserName,
   waitForDiscordConnection,
 } from '@/functions/discord.function';
+import discord from '@/libs/discord';
+import { Events, Types } from '@discord/embedded-app-sdk';
 import { createContext, use, useEffect, useRef, useState } from 'react';
 
 export type DiscordUser = NonNullable<Awaited<ReturnType<typeof getDiscordUser>>['data']>;
@@ -73,24 +77,30 @@ export function DiscordProvider({ children }: { children: React.ReactNode }) {
         setPlayers(playersResponse.data!);
         setLoading(false);
 
-        // const updateParticipants = ({ participants }: Types.GetActivityInstanceConnectedParticipantsResponse) =>
-        //   setParticipants(participants);
-        // discord.subscribe(Events.ACTIVITY_INSTANCE_PARTICIPANTS_UPDATE, updateParticipants);
-        // return () => {
-        //   discord.unsubscribe(Events.ACTIVITY_INSTANCE_PARTICIPANTS_UPDATE, updateParticipants);
-        // };
+        const updatePlayers = ({ participants }: Types.GetActivityInstanceConnectedParticipantsResponse) =>
+          setPlayers(
+            participants.map((participant) => ({
+              ...participant,
+              username: getDiscordUserName(participant.global_name, participant.username, participant.discriminator),
+              avatarUrl: getDiscordUserAvatarUrl(participant.id, participant.avatar),
+            })),
+          );
+
+        discord.subscribe(Events.ACTIVITY_INSTANCE_PARTICIPANTS_UPDATE, updatePlayers);
+        return () => {
+          discord.unsubscribe(Events.ACTIVITY_INSTANCE_PARTICIPANTS_UPDATE, updatePlayers);
+        };
       } catch (error) {
         console.error('Error during Discord setup:', error);
         return setLoading(false);
       }
     };
 
-    // let setupListener: Awaited<ReturnType<typeof setup>>;
-    // setup().then((listener) => (setupListener = listener));
-    // return () => {
-    //   if (setupListener) setupListener();
-    // };
-    setup();
+    let setupListener: Awaited<ReturnType<typeof setup>>;
+    setup().then((listener) => (setupListener = listener));
+    return () => {
+      if (setupListener) setupListener();
+    };
   }, []);
 
   return (

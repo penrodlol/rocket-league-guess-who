@@ -1,10 +1,11 @@
-import { composeChildren } from '@/libs/primitive';
 import { Focusable, OverlayArrow, Tooltip, TooltipTrigger } from 'react-aria-components';
+import { ClassNameValue } from 'tailwind-merge';
 import { tv, VariantProps } from 'tailwind-variants';
 
 export type TooltipRootProps = React.ComponentProps<typeof TooltipTrigger>;
 export type TooltipTriggerProps = React.ComponentProps<typeof Focusable>;
-export type TooltipContentProps = React.PrimitiveComponentProps<typeof Tooltip> & TooltipContentVariants;
+export type TooltipContentProps = Omit<React.ComponentProps<typeof Tooltip>, 'children' | 'className'> &
+  TooltipContentVariants & { children: React.ReactNode; className?: ClassNameValue };
 
 export type TooltipContentVariants = VariantProps<typeof tooltipContentVariants>;
 
@@ -52,16 +53,12 @@ export function Content({ children, className, elevation, size, variant, ...prop
   const variants = tooltipContentVariants({ elevation, size, variant });
   return (
     <Tooltip offset={10} className={variants.base({ className })} {...props}>
-      {(renderProps) => (
-        <>
-          <OverlayArrow>
-            <svg viewBox="0 0 8 8" className={variants.arrow()}>
-              <path d="M0 0 L4 4 L8 0" />
-            </svg>
-          </OverlayArrow>
-          {composeChildren(children, renderProps)}
-        </>
-      )}
+      <OverlayArrow>
+        <svg viewBox="0 0 8 8" className={variants.arrow()}>
+          <path d="M0 0 L4 4 L8 0" />
+        </svg>
+      </OverlayArrow>
+      {children}
     </Tooltip>
   );
 }

@@ -51,7 +51,7 @@ function App() {
             </Text>
           </div>
           <ul className="flex items-center">
-            {[...players, ...players, ...players, ...players, ...players].map((player) => (
+            {players.map((player) => (
               <li key={player.id} className="not-last:-mr-2">
                 <Tooltip.Root delay={200} closeDelay={200}>
                   <Tooltip.Trigger>

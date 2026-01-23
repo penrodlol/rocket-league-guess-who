@@ -9,7 +9,7 @@ import viteTsConfigPaths from 'vite-tsconfig-paths';
 const config = defineConfig({
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   plugins: [nitro(), viteTsConfigPaths({ projects: ['./tsconfig.json'] }), tailwindcss(), tanstackStart(), viteReact()],
-  server: { allowedHosts: ['baskets-candidate-belief-urban.trycloudflare.com'] },
+  server: { allowedHosts: ['enjoyed-europe-ridge-other.trycloudflare.com'] },
 });
 
 export default config;
