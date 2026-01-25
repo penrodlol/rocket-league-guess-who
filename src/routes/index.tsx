@@ -8,17 +8,18 @@ import * as Tooltip from '@/components/ui/tooltip';
 import { characters } from '@/data/characters';
 import { useDiscord } from '@/providers/discord.provider';
 import { useForm } from '@tanstack/react-form';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/')({ component: App });
 
 function App() {
   const { players } = useDiscord();
+  const navigate = useNavigate();
   const form = useForm({
     defaultValues: { characters: characters.map((character) => character.name) },
     onSubmit: async (values) => {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
       console.log('Form submitted with values:', values);
+      navigate({ to: '/rounds/$roundId', params: { roundId: '1' }, replace: true });
     },
   });
 

@@ -10,33 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RoundsRoundIdRouteImport } from './routes/rounds/$roundId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RoundsRoundIdRoute = RoundsRoundIdRouteImport.update({
+  id: '/rounds/$roundId',
+  path: '/rounds/$roundId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/rounds/$roundId': typeof RoundsRoundIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/rounds/$roundId': typeof RoundsRoundIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/rounds/$roundId': typeof RoundsRoundIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/rounds/$roundId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/rounds/$roundId'
+  id: '__root__' | '/' | '/rounds/$roundId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  RoundsRoundIdRoute: typeof RoundsRoundIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +58,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rounds/$roundId': {
+      id: '/rounds/$roundId'
+      path: '/rounds/$roundId'
+      fullPath: '/rounds/$roundId'
+      preLoaderRoute: typeof RoundsRoundIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  RoundsRoundIdRoute: RoundsRoundIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
