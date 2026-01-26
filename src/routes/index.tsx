@@ -1,14 +1,18 @@
-import { CharacterCard } from '@/components/character-card';
-import { Avatar } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import Spinner from '@/components/ui/spinner';
-import { Surface } from '@/components/ui/surface';
-import { Text } from '@/components/ui/text';
-import * as Tooltip from '@/components/ui/tooltip';
-import { characters } from '@/data/characters';
+import { Avatar } from '@/components/avatar';
+import { Badge } from '@/components/badge';
+import { Button } from '@/components/button';
+import Spinner from '@/components/spinner';
+import { Surface } from '@/components/surface';
+import { Text } from '@/components/text';
+import * as Tooltip from '@/components/tooltip';
+import { Role, roles } from '@/data/roles';
 import { useDiscord } from '@/providers/discord.provider';
 import { useForm } from '@tanstack/react-form';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { CheckIcon } from 'lucide-react';
+import { twJoin, twMerge } from 'tailwind-merge';
+
+type RoleCardProps = Omit<React.ComponentProps<'input'>, 'role'> & { role: Role };
 
 export const Route = createFileRoute('/')({ component: App });
 
@@ -16,10 +20,10 @@ function App() {
   const { players } = useDiscord();
   const navigate = useNavigate();
   const form = useForm({
-    defaultValues: { characters: characters.map((character) => character.name) },
+    defaultValues: { roles: roles.map((role) => role.name) },
     onSubmit: async (values) => {
       console.log('Form submitted with values:', values);
-      navigate({ to: '/rounds/$roundId', params: { roundId: '1' }, replace: true });
+      navigate({ to: '/game', replace: true });
     },
   });
 
@@ -48,7 +52,7 @@ function App() {
               <li key={player.id} className="not-last:-mr-2">
                 <Tooltip.Root delay={200} closeDelay={200}>
                   <Tooltip.Trigger>
-                    <Avatar elevation="3" src={player.avatarUrl} alt={player.username} />
+                    <Avatar elevation="3" size="3" src={player.avatarUrl} alt={player.username} />
                   </Tooltip.Trigger>
                   <Tooltip.Content elevation="3">{player.username}</Tooltip.Content>
                 </Tooltip.Root>
@@ -61,26 +65,26 @@ function App() {
           onSubmit={(e) => (e.preventDefault(), e.stopPropagation(), form.handleSubmit())}
         >
           <form.Field
-            name="characters"
+            name="roles"
             mode="array"
             children={(field) => {
               return (
                 <fieldset
-                  aria-label="Characters"
-                  aria-describedby="characters-select-description"
+                  aria-label="Roles"
+                  aria-describedby="roles-select-description"
                   className="mt-4 grid grid-cols-4 gap-4"
                 >
-                  {characters.map((character) => (
-                    <CharacterCard
+                  {roles.map((role) => (
+                    <RoleCard
                       defaultChecked
-                      key={character.name}
-                      name={character.name}
-                      value={character.name}
-                      checked={field.state.value.includes(character.name)}
-                      character={character}
+                      key={role.name}
+                      name={role.name}
+                      value={role.name}
+                      checked={field.state.value.includes(role.name)}
+                      role={role}
                       onChange={(e) => {
-                        if (e.target.checked) field.pushValue(character.name);
-                        else field.removeValue(field.state.value.indexOf(character.name));
+                        if (e.target.checked) field.pushValue(role.name);
+                        else field.removeValue(field.state.value.indexOf(role.name));
                       }}
                     />
                   ))}
@@ -109,5 +113,55 @@ function App() {
         </form>
       </div>
     </div>
+  );
+}
+
+export function RoleCard({ className, role, ...props }: RoleCardProps) {
+  return (
+    <Surface
+      rounded
+      elevation="3"
+      variant="accent-solid-outline-gradient"
+      className={twMerge(
+        'group/role-card relative flex flex-col gap-2 p-2 select-none',
+        'not-has-checked:scale-[0.97] not-has-checked:opacity-50',
+        'motion-safe:transition-all',
+        className,
+      )}
+    >
+      <Badge
+        aria-hidden="true"
+        icon={{ source: <CheckIcon /> }}
+        className={twJoin(
+          'absolute -top-2 -right-2 motion-safe:transition-all',
+          'group-not-has-checked/role-card:opacity-0',
+          'group-not-has-checked/role-card:scale-[0.95]',
+        )}
+      />
+      <Surface className="h-40 overflow-hidden py-2">
+        <img
+          src={`/roles/${role.name.toLowerCase()}.png`}
+          alt={role.name}
+          aria-hidden="true"
+          className="drop-shadow-accent-9/50 aspect-square size-full object-contain drop-shadow-md"
+        />
+      </Surface>
+      <Surface
+        rounded
+        elevation="2"
+        variant="accent-soft-outline"
+        id={`${role.name}-description`}
+        className="flex min-h-20 items-center justify-center p-2 text-center text-balance"
+      >
+        <Text size="2">{role.description}</Text>
+      </Surface>
+      <input
+        type="checkbox"
+        aria-label={role.name}
+        aria-describedby={`${role.name}-description`}
+        className="absolute inset-0 appearance-none rounded-[inherit] focus-visible:outline-none"
+        {...props}
+      />
+    </Surface>
   );
 }

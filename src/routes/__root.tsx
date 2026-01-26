@@ -1,4 +1,4 @@
-import Spinner from '@/components/ui/spinner';
+import Spinner from '@/components/spinner';
 import { DiscordProvider, useDiscord } from '@/providers/discord.provider';
 import type { QueryClient } from '@tanstack/react-query';
 import { HeadContent, Scripts, createRootRouteWithContext } from '@tanstack/react-router';

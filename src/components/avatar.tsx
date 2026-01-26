@@ -12,7 +12,7 @@ export const avatarVariants = tv({
   defaultVariants: { size: '2', variant: 'accent-soft-outline' },
   variants: {
     elevation: { '1': 'elevation-1', '2': 'elevation-2', '3': 'elevation-3' },
-    size: { '1': 'size-9', '2': 'size-10', '3': 'size-11', '4': 'size-12', '5': 'size-13' },
+    size: { '1': 'size-7', '2': 'size-8', '3': 'size-9', '4': 'size-10', '5': 'size-11' },
     variant: {
       'gray-solid': 'bg-gray-9 text-gray-contrast',
       'gray-soft': 'bg-gray-3 text-gray-11',

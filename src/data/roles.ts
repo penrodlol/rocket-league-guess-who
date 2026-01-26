@@ -1,7 +1,7 @@
-export type Character = { name: string; description: string };
-export type Characters = Array<Character>;
+export type Role = { name: string; description: string };
+export type Roles = Array<Role>;
 
-export const characters = [
+export const roles = [
   { name: 'Agent', description: 'Participate in 3+ goals' },
   { name: 'Detonator', description: 'Get 3+ Demos' },
   { name: 'Fool', description: "Make everyone guess you're a something different" },
@@ -10,4 +10,4 @@ export const characters = [
   { name: 'Mafia', description: 'Lose the game' },
   { name: 'Pacifist', description: "Can't score goals. Must win" },
   { name: 'Villager', description: 'Win the game' },
-] satisfies Characters;
+] as const satisfies Roles;

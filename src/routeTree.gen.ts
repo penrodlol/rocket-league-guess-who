@@ -9,48 +9,55 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as GameRouteImport } from './routes/game'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as RoundsRoundIdRouteImport } from './routes/rounds/$roundId'
 
+const GameRoute = GameRouteImport.update({
+  id: '/game',
+  path: '/game',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RoundsRoundIdRoute = RoundsRoundIdRouteImport.update({
-  id: '/rounds/$roundId',
-  path: '/rounds/$roundId',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/rounds/$roundId': typeof RoundsRoundIdRoute
+  '/game': typeof GameRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/rounds/$roundId': typeof RoundsRoundIdRoute
+  '/game': typeof GameRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/rounds/$roundId': typeof RoundsRoundIdRoute
+  '/game': typeof GameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/rounds/$roundId'
+  fullPaths: '/' | '/game'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/rounds/$roundId'
-  id: '__root__' | '/' | '/rounds/$roundId'
+  to: '/' | '/game'
+  id: '__root__' | '/' | '/game'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  RoundsRoundIdRoute: typeof RoundsRoundIdRoute
+  GameRoute: typeof GameRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/game': {
+      id: '/game'
+      path: '/game'
+      fullPath: '/game'
+      preLoaderRoute: typeof GameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -58,19 +65,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/rounds/$roundId': {
-      id: '/rounds/$roundId'
-      path: '/rounds/$roundId'
-      fullPath: '/rounds/$roundId'
-      preLoaderRoute: typeof RoundsRoundIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  RoundsRoundIdRoute: RoundsRoundIdRoute,
+  GameRoute: GameRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
