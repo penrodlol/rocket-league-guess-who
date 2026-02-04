@@ -29,7 +29,7 @@ export type WheelContextValue = {
 };
 
 export const WheelContext = createContext<WheelContextValue | undefined>(undefined);
-export function useWheelContext() {
+export function useWheel() {
   const context = use(WheelContext);
   if (!context) throw new Error('useWheelContext must be used within a WheelProvider');
   return context;
@@ -89,7 +89,7 @@ export function Root({ items, onSpinStart, onSpinStop, ...props }: WheelRootProp
 }
 
 export function Items({ className, ...props }: WheelItemsProps) {
-  const { canvasRef } = useWheelContext();
+  const { canvasRef } = useWheel();
   return (
     <div
       className={twMerge(
@@ -107,7 +107,7 @@ export function Items({ className, ...props }: WheelItemsProps) {
 }
 
 export function Trigger({ onClick, ...props }: WheelTriggerProps) {
-  const { engineRef, isSpinning, setIsSpinning, setWinner, onSpinStart } = useWheelContext();
+  const { engineRef, isSpinning, setIsSpinning, setWinner, onSpinStart } = useWheel();
   const handleClick = useCallback(
     (event: React.MouseEvent<HTMLButtonElement>) => {
       if (isSpinning) return;

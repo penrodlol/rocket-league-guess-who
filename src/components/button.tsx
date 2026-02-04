@@ -1,8 +1,10 @@
+import { Button as ButtonPrimitive } from 'react-aria-components';
+import { ClassNameValue } from 'tailwind-merge';
 import { tv, type VariantProps } from 'tailwind-variants';
 import Icon from './icon';
 
-export type ButtonProps = React.ComponentProps<'button'> &
-  ButtonVariants & { icon?: React.ComponentProps<typeof Icon> };
+export type ButtonProps = Omit<React.ComponentProps<typeof ButtonPrimitive>, 'children' | 'className'> &
+  ButtonVariants & { children?: React.ReactNode; className?: ClassNameValue; icon?: React.ComponentProps<typeof Icon> };
 
 export type ButtonVariants = VariantProps<typeof buttonVariants>;
 
@@ -10,8 +12,8 @@ export const buttonVariants = tv({
   base: [
     'inline-flex shrink-0 items-center justify-center gap-2 rounded font-medium whitespace-nowrap select-none',
     'disabled:pointer-events-none disabled:opacity-50 ',
-    'focus-visible:ring-accent-8 focus-visible:ring-2 focus-visible:outline-none',
-    'motion-safe:active:scale-[0.97] motion-safe:transition-all',
+    'focus:ring-accent-8 focus:ring-2 focus:outline-none',
+    'motion-safe:pressed:scale-[0.97] motion-safe:transition-all',
   ],
   defaultVariants: { size: '2', variant: 'accent-solid' },
   variants: {
@@ -40,15 +42,26 @@ export const buttonVariants = tv({
       'accent-soft-outline': 'bg-accent-3 text-accent-11 border-accent-7 hover:border-accent-8 border',
       'accent-outline': 'text-accent-11 border-accent-8 hover:bg-accent-3 border',
       'accent-ghost': 'text-accent-11 hover:bg-accent-3',
+      'warn-solid': 'bg-warn-9 text-warn-contrast hover:bg-warn-10 focus:ring-warn-8',
+      'warn-soft': 'bg-warn-3 text-warn-11 hover:bg-warn-4 focus:ring-warn-8',
+      'warn-soft-outline': 'bg-warn-3 text-warn-11 border-warn-7 hover:border-warn-8 border focus:ring-warn-8',
+      'warn-outline': 'text-warn-11 border-warn-8 hover:bg-warn-3 border focus:ring-warn-8',
+      'warn-ghost': 'text-warn-11 hover:bg-warn-3 focus:ring-warn-8',
+      'danger-solid': 'bg-danger-9 text-danger-contrast hover:bg-danger-10 focus:ring-danger-8',
+      'danger-soft': 'bg-danger-3 text-danger-11 hover:bg-danger-4 focus:ring-danger-8',
+      'danger-soft-outline':
+        'bg-danger-3 text-danger-11 border-danger-7 hover:border-danger-8 border focus:ring-danger-8',
+      'danger-outline': 'text-danger-11 border-danger-8 hover:bg-danger-3 border focus:ring-danger-8',
+      'danger-ghost': 'text-danger-11 hover:bg-danger-3 focus:ring-danger-8',
     },
   },
 });
 
 export function Button({ children, className, font, elevation, variant, size, icon, ...props }: ButtonProps) {
   return (
-    <button className={buttonVariants({ font, elevation, variant, size, className })} {...props}>
+    <ButtonPrimitive className={buttonVariants({ font, elevation, variant, size, className })} {...props}>
       {icon && <Icon {...icon} />}
       {children}
-    </button>
+    </ButtonPrimitive>
   );
 }

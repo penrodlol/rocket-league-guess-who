@@ -8,20 +8,18 @@ import {
   waitForDiscordConnection,
 } from '@/functions/discord.function';
 import discord from '@/libs/discord';
-import { Events, Types } from '@discord/embedded-app-sdk';
+import { Events, patchUrlMappings, Types } from '@discord/embedded-app-sdk';
 import { createContext, use, useEffect, useRef, useState } from 'react';
 
 export type DiscordUser = NonNullable<Awaited<ReturnType<typeof getDiscordUser>>['data']>;
 export type DiscordPlayer = NonNullable<Awaited<ReturnType<typeof getDiscordPlayers>>['data']>[0];
 export type DiscordContextValue = {
   loading: boolean;
-  instanceId: string | null;
-  user: DiscordUser | null;
+  hosting: boolean;
+  instanceId: string;
+  user: DiscordUser;
   players: Array<DiscordPlayer>;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  setInstanceId: React.Dispatch<React.SetStateAction<string | null>>;
-  setUser: React.Dispatch<React.SetStateAction<DiscordUser | null>>;
-  setPlayers: React.Dispatch<React.SetStateAction<Array<DiscordPlayer>>>;
 };
 
 export const DiscordContext = createContext<DiscordContextValue | null>(null);
@@ -35,8 +33,9 @@ export function useDiscord() {
 export function DiscordProvider({ children }: { children: React.ReactNode }) {
   const isDiscordSetup = useRef(false);
   const [loading, setLoading] = useState<DiscordContextValue['loading']>(true);
-  const [instanceId, setInstanceId] = useState<DiscordContextValue['instanceId'] | null>(null);
-  const [user, setUser] = useState<DiscordContextValue['user'] | null>(null);
+  const [instanceId, setInstanceId] = useState<DiscordContextValue['instanceId']>('');
+  const [hosting, setHosting] = useState<DiscordContextValue['hosting']>(false);
+  const [user, setUser] = useState<DiscordContextValue['user']>({} as DiscordContextValue['user']);
   const [players, setPlayers] = useState<DiscordContextValue['players']>([]);
 
   useEffect(() => {
@@ -60,9 +59,14 @@ export function DiscordProvider({ children }: { children: React.ReactNode }) {
         const playersResponse = await getDiscordPlayers();
         if (playersResponse.error) throw new Error(playersResponse.error);
 
+        const prefix = import.meta.env.VITE_SUPABASE_DISCORD_PATH;
+        const target = import.meta.env.VITE_SUPABASE_URL.replace('https://', '');
+        patchUrlMappings([{ prefix, target }]);
+
         setInstanceId(discord.instanceId);
         setUser(userResponse.data!);
         setPlayers(playersResponse.data!);
+        setHosting(playersResponse.data?.length === 1 && playersResponse.data?.[0]?.id === userResponse.data!.id);
         setLoading(false);
 
         const updatePlayers = ({ participants }: Types.GetActivityInstanceConnectedParticipantsResponse) =>
@@ -92,9 +96,7 @@ export function DiscordProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <DiscordContext.Provider
-      value={{ loading, instanceId, user, players, setLoading, setInstanceId, setUser, setPlayers }}
-    >
+    <DiscordContext.Provider value={{ loading, instanceId, hosting, user, players, setLoading }}>
       {children}
     </DiscordContext.Provider>
   );

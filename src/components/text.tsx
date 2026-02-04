@@ -11,7 +11,12 @@ export const textVariants = tv({
     font: { sans: 'font-sans', serif: 'font-serif', mono: 'font-mono', display: 'font-display' },
     italic: { true: 'italic' },
     underline: { true: 'underline underline-offset-6' },
-    variant: { soft: 'text-gray-11', accent: 'text-accent-11 selection:bg-accent-5' },
+    variant: {
+      soft: 'text-gray-11',
+      accent: 'text-accent-11 selection:bg-accent-5',
+      warn: 'text-warn-11 selection:bg-warn-5',
+      danger: 'text-danger-11 selection:bg-danger-5',
+    },
     size: {
       '1': 'text-xs',
       '2': 'text-sm',

@@ -9,7 +9,7 @@ export const iconVariants = tv({
   base: 'shrink-0',
   defaultVariants: { size: '2' },
   variants: {
-    variant: { soft: 'text-gray-11', accent: 'text-accent-11' },
+    variant: { soft: 'text-gray-11', accent: 'text-accent-11', warn: 'text-warn-11', danger: 'text-danger-11' },
     size: { '1': 'size-4', '2': 'size-5', '3': 'size-6', '4': 'size-7', '5': 'size-8' },
   },
 });

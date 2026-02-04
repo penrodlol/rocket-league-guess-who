@@ -5,25 +5,33 @@ import Spinner from '@/components/spinner';
 import { Surface } from '@/components/surface';
 import { Text } from '@/components/text';
 import * as Tooltip from '@/components/tooltip';
-import { Role, roles } from '@/data/roles';
+import { createGame, getRoles } from '@/functions/supabase.function';
 import { useDiscord } from '@/providers/discord.provider';
 import { useForm } from '@tanstack/react-form';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { CheckIcon } from 'lucide-react';
 import { twJoin, twMerge } from 'tailwind-merge';
 
-type RoleCardProps = Omit<React.ComponentProps<'input'>, 'role'> & { role: Role };
+type RoleCardProps = Omit<React.ComponentProps<'input'>, 'role'> & { hosting: boolean; role: any };
 
-export const Route = createFileRoute('/')({ component: App });
+export const Route = createFileRoute('/')({
+  component: App,
+  loader: async () => {
+    const rolesResponse = await getRoles();
+    if (!rolesResponse.success) throw new Error(rolesResponse.error);
+    return rolesResponse.data;
+  },
+});
 
 function App() {
-  const { players } = useDiscord();
+  const roles = Route.useLoaderData();
+  const { instanceId, hosting, players } = useDiscord();
   const navigate = useNavigate();
   const form = useForm({
-    defaultValues: { roles: roles.map((role) => role.name) },
-    onSubmit: async (values) => {
-      console.log('Form submitted with values:', values);
-      navigate({ to: '/game', replace: true });
+    defaultValues: { roles: roles.map((role) => role.id) ?? [] },
+    onSubmit: async ({ value }) => {
+      const response = await createGame({ instanceId, hosting, players, roles: value.roles });
+      if (response.success) navigate({ to: '/game', replace: true });
     },
   });
 
@@ -79,12 +87,13 @@ function App() {
                       defaultChecked
                       key={role.name}
                       name={role.name}
-                      value={role.name}
-                      checked={field.state.value.includes(role.name)}
+                      value={role.id}
+                      checked={field.state.value.includes(role.id)}
+                      hosting={hosting}
                       role={role}
                       onChange={(e) => {
-                        if (e.target.checked) field.pushValue(role.name);
-                        else field.removeValue(field.state.value.indexOf(role.name));
+                        if (e.target.checked) field.pushValue(role.id);
+                        else field.removeValue(field.state.value.indexOf(role.id));
                       }}
                     />
                   ))}
@@ -92,31 +101,33 @@ function App() {
               );
             }}
           />
-          <form.Subscribe
-            selector={(state) => [state.isSubmitting]}
-            children={([isSubmitting]) => {
-              return (
-                <Button
-                  type="submit"
-                  font="display"
-                  elevation="3"
-                  size="5"
-                  className="gap-4 self-center"
-                  disabled={isSubmitting ?? false}
-                >
-                  {isSubmitting && <Spinner />}
-                  Start Game
-                </Button>
-              );
-            }}
-          />
+          {hosting && (
+            <form.Subscribe
+              selector={(state) => [state.isSubmitting]}
+              children={([isSubmitting]) => {
+                return (
+                  <Button
+                    type="submit"
+                    font="display"
+                    elevation="3"
+                    size="5"
+                    className="gap-4 self-center"
+                    isDisabled={isSubmitting ?? false}
+                  >
+                    {isSubmitting && <Spinner />}
+                    Start Game
+                  </Button>
+                );
+              }}
+            />
+          )}
         </form>
       </div>
     </div>
   );
 }
 
-export function RoleCard({ className, role, ...props }: RoleCardProps) {
+export function RoleCard({ className, hosting, role, ...props }: RoleCardProps) {
   return (
     <Surface
       rounded
@@ -124,23 +135,25 @@ export function RoleCard({ className, role, ...props }: RoleCardProps) {
       variant="accent-solid-outline-gradient"
       className={twMerge(
         'group/role-card relative flex flex-col gap-2 p-2 select-none',
-        'not-has-checked:scale-[0.97] not-has-checked:opacity-50',
-        'motion-safe:transition-all',
+        hosting && 'not-has-checked:scale-[0.97] not-has-checked:opacity-50',
+        hosting && 'motion-safe:transition-all',
         className,
       )}
     >
-      <Badge
-        aria-hidden="true"
-        icon={{ source: <CheckIcon /> }}
-        className={twJoin(
-          'absolute -top-2 -right-2 motion-safe:transition-all',
-          'group-not-has-checked/role-card:opacity-0',
-          'group-not-has-checked/role-card:scale-[0.95]',
-        )}
-      />
+      {hosting && (
+        <Badge
+          aria-hidden="true"
+          icon={{ source: <CheckIcon /> }}
+          className={twJoin(
+            'absolute -top-2 -right-2 motion-safe:transition-all',
+            'group-not-has-checked/role-card:opacity-0',
+            'group-not-has-checked/role-card:scale-[0.95]',
+          )}
+        />
+      )}
       <Surface className="h-40 overflow-hidden py-2">
         <img
-          src={`/roles/${role.name.toLowerCase()}.png`}
+          src={role.imageUrl}
           alt={role.name}
           aria-hidden="true"
           className="drop-shadow-accent-9/50 aspect-square size-full object-contain drop-shadow-md"
@@ -155,13 +168,15 @@ export function RoleCard({ className, role, ...props }: RoleCardProps) {
       >
         <Text size="2">{role.description}</Text>
       </Surface>
-      <input
-        type="checkbox"
-        aria-label={role.name}
-        aria-describedby={`${role.name}-description`}
-        className="absolute inset-0 appearance-none rounded-[inherit] focus-visible:outline-none"
-        {...props}
-      />
+      {hosting && (
+        <input
+          type="checkbox"
+          aria-label={role.name}
+          aria-describedby={`${role.name}-description`}
+          className="absolute inset-0 appearance-none rounded-[inherit] focus-visible:outline-none"
+          {...props}
+        />
+      )}
     </Surface>
   );
 }

@@ -21,19 +21,47 @@
   --color-gray-12: oklch(0.24 0 0);
   --color-gray-contrast: oklch(0 0 0);
 
-  --color-accent-1: oklch(96.2% 0.0013 257.3);
-  --color-accent-2: oklch(94.8% 0.0071 257.3);
-  --color-accent-3: oklch(92.3% 0.0153 257.3);
-  --color-accent-4: oklch(89.6% 0.0301 257.3);
-  --color-accent-5: oklch(86.1% 0.0455 257.3);
-  --color-accent-6: oklch(81.9% 0.0635 257.3);
-  --color-accent-7: oklch(76.1% 0.0773 257.3);
-  --color-accent-8: oklch(68.2% 0.1007 257.3);
-  --color-accent-9: oklch(42.9% 0.1537 257.3);
-  --color-accent-10: oklch(37.2% 0.1537 257.3);
-  --color-accent-11: oklch(46.3% 0.1537 257.3);
-  --color-accent-12: oklch(31.3% 0.0761 257.3);
-  --color-accent-contrast: oklch(100 0 0);
+  --color-accent-1: oklch(0.962 0.0013 257.3);
+  --color-accent-2: oklch(0.948 0.0071 257.3);
+  --color-accent-3: oklch(0.923 0.0153 257.3);
+  --color-accent-4: oklch(0.896 0.0301 257.3);
+  --color-accent-5: oklch(0.861 0.0455 257.3);
+  --color-accent-6: oklch(0.819 0.0635 257.3);
+  --color-accent-7: oklch(0.761 0.0773 257.3);
+  --color-accent-8: oklch(0.682 0.1007 257.3);
+  --color-accent-9: oklch(0.429 0.1537 257.3);
+  --color-accent-10: oklch(0.372 0.1537 257.3);
+  --color-accent-11: oklch(0.463 0.1537 257.3);
+  --color-accent-12: oklch(0.313 0.0761 257.3);
+  --color-accent-contrast: oklch(1 0 0);
+
+  --color-warn-1: oklch(0.962 0.002 83.32);
+  --color-warn-2: oklch(0.95 0.0137 83.32);
+  --color-warn-3: oklch(0.924 0.038 83.32);
+  --color-warn-4: oklch(0.896 0.0589 83.32);
+  --color-warn-5: oklch(0.865 0.0774 83.32);
+  --color-warn-6: oklch(0.827 0.0772 83.32);
+  --color-warn-7: oklch(0.775 0.083 83.32);
+  --color-warn-8: oklch(0.704 0.1019 83.32);
+  --color-warn-9: oklch(0.689 0.1147 83.32);
+  --color-warn-10: oklch(0.651 0.1147 83.32);
+  --color-warn-11: oklch(0.494 0.1035 83.32);
+  --color-warn-12: oklch(0.342 0.0318 83.32);
+  --color-warn-contrast: oklch(1 0 0);
+
+  --color-danger-1: oklch(0.962 0.0019 21.15);
+  --color-danger-2: oklch(0.948 0.0061 21.15);
+  --color-danger-3: oklch(0.918 0.0141 21.15);
+  --color-danger-4: oklch(0.887 0.0271 21.15);
+  --color-danger-5: oklch(0.855 0.0369 21.15);
+  --color-danger-6: oklch(0.816 0.0472 21.15);
+  --color-danger-7: oklch(0.766 0.0608 21.15);
+  --color-danger-8: oklch(0.698 0.0804 21.15);
+  --color-danger-9: oklch(0.538 0.1047 21.15);
+  --color-danger-10: oklch(0.491 0.1047 21.15);
+  --color-danger-11: oklch(0.481 0.1047 21.15);
+  --color-danger-12: oklch(0.334 0.0489 21.15);
+  --color-danger-contrast: oklch(1 0 0);
 }
 
 @utility elevation-1 {
