@@ -105,7 +105,7 @@ export function Items({ className, ...props }: WheelItemsProps) {
         className,
       )}
     >
-      <canvas ref={canvasRef} width={650} height={650} {...props} />
+      <canvas ref={canvasRef} width={550} height={550} {...props} />
     </div>
   );
 }

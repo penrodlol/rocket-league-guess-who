@@ -81,9 +81,14 @@ export const getGame = createServerFn({ method: 'POST' })
         )
         .eq('discord_instance_id', discordInstanceId)
         .single();
-      return gameResponse.error
-        ? { success: false, error: GET_GAME_ERROR }
-        : { success: true, data: gameResponse.data };
+      if (gameResponse.error) return { success: false, error: GET_GAME_ERROR };
+
+      const response = {
+        ...gameResponse.data,
+        ready: gameResponse.data.players.every((player) => !!player.role?.id),
+      };
+
+      return { success: true, data: response };
     } catch (error) {
       return { success: false, error: GET_GAME_ERROR };
     }
@@ -94,12 +99,8 @@ export const updateGamePlayerRole = createClientOnlyFn(async (playerId: string, 
     const response = await supabaseClient
       .from('guess_who_game_players')
       .update({ game_role_id: roleId })
-      .eq('id', playerId)
-      .select('id, roleId: game_role_id')
-      .single();
-    return response.error
-      ? { success: false, error: UPDATE_GAME_PLAYER_ROLE_ERROR }
-      : { success: true, data: response.data };
+      .eq('id', playerId);
+    return response.error ? { success: false, error: UPDATE_GAME_PLAYER_ROLE_ERROR } : { success: true };
   } catch (error) {
     return { success: false, error: UPDATE_GAME_PLAYER_ROLE_ERROR };
   }
