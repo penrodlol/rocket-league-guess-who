@@ -14,12 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      guess_who_game_guesses: {
+        Row: {
+          correct: boolean | null
+          created_at: string
+          game_id: string
+          game_player_id: string
+          guessed_game_role_id: string
+          id: string
+          target_game_player_id: string
+        }
+        Insert: {
+          correct?: boolean | null
+          created_at?: string
+          game_id: string
+          game_player_id: string
+          guessed_game_role_id: string
+          id?: string
+          target_game_player_id: string
+        }
+        Update: {
+          correct?: boolean | null
+          created_at?: string
+          game_id?: string
+          game_player_id?: string
+          guessed_game_role_id?: string
+          id?: string
+          target_game_player_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guess_who_game_guesses_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "guess_who_games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guess_who_game_guesses_game_player_id_fkey"
+            columns: ["game_player_id"]
+            isOneToOne: false
+            referencedRelation: "guess_who_game_players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guess_who_game_guesses_guessed_game_role_id_fkey"
+            columns: ["guessed_game_role_id"]
+            isOneToOne: false
+            referencedRelation: "guess_who_game_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guess_who_game_guesses_target_game_player_id_fkey"
+            columns: ["target_game_player_id"]
+            isOneToOne: false
+            referencedRelation: "guess_who_game_players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       guess_who_game_players: {
         Row: {
           avatar_url: string
           car_image: string | null
           created_at: string
           game_id: string
+          game_role_id: string | null
           host: boolean | null
           id: string
           score: number
@@ -31,6 +91,7 @@ export type Database = {
           car_image?: string | null
           created_at?: string
           game_id: string
+          game_role_id?: string | null
           host?: boolean | null
           id?: string
           score?: number
@@ -42,6 +103,7 @@ export type Database = {
           car_image?: string | null
           created_at?: string
           game_id?: string
+          game_role_id?: string | null
           host?: boolean | null
           id?: string
           score?: number
@@ -54,6 +116,13 @@ export type Database = {
             columns: ["game_id"]
             isOneToOne: false
             referencedRelation: "guess_who_games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guess_who_game_players_game_role_id_fkey"
+            columns: ["game_role_id"]
+            isOneToOne: false
+            referencedRelation: "guess_who_game_roles"
             referencedColumns: ["id"]
           },
         ]
@@ -90,143 +159,6 @@ export type Database = {
             columns: ["role_id"]
             isOneToOne: false
             referencedRelation: "guess_who_roles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      guess_who_game_round_guesses: {
-        Row: {
-          correct: boolean | null
-          created_at: string
-          game_round_id: string
-          guessed_game_role_id: string
-          guesser_game_player_id: string
-          id: string
-          target_game_player_id: string
-        }
-        Insert: {
-          correct?: boolean | null
-          created_at?: string
-          game_round_id: string
-          guessed_game_role_id: string
-          guesser_game_player_id: string
-          id?: string
-          target_game_player_id: string
-        }
-        Update: {
-          correct?: boolean | null
-          created_at?: string
-          game_round_id?: string
-          guessed_game_role_id?: string
-          guesser_game_player_id?: string
-          id?: string
-          target_game_player_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "guess_who_game_round_guesses_game_round_id_fkey"
-            columns: ["game_round_id"]
-            isOneToOne: false
-            referencedRelation: "guess_who_game_rounds"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "guess_who_game_round_guesses_guessed_game_role_id_fkey"
-            columns: ["guessed_game_role_id"]
-            isOneToOne: false
-            referencedRelation: "guess_who_game_roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "guess_who_game_round_guesses_guesser_game_player_id_fkey"
-            columns: ["guesser_game_player_id"]
-            isOneToOne: false
-            referencedRelation: "guess_who_game_players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "guess_who_game_round_guesses_target_game_player_id_fkey"
-            columns: ["target_game_player_id"]
-            isOneToOne: false
-            referencedRelation: "guess_who_game_players"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      guess_who_game_round_player_roles: {
-        Row: {
-          created_at: string
-          game_player_id: string
-          game_role_id: string
-          game_round_id: string
-          id: string
-        }
-        Insert: {
-          created_at?: string
-          game_player_id: string
-          game_role_id: string
-          game_round_id: string
-          id?: string
-        }
-        Update: {
-          created_at?: string
-          game_player_id?: string
-          game_role_id?: string
-          game_round_id?: string
-          id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "guess_who_game_round_player_roles_game_player_id_fkey"
-            columns: ["game_player_id"]
-            isOneToOne: false
-            referencedRelation: "guess_who_game_players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "guess_who_game_round_player_roles_game_role_id_fkey"
-            columns: ["game_role_id"]
-            isOneToOne: false
-            referencedRelation: "guess_who_game_roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "guess_who_game_round_player_roles_game_round_id_fkey"
-            columns: ["game_round_id"]
-            isOneToOne: false
-            referencedRelation: "guess_who_game_rounds"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      guess_who_game_rounds: {
-        Row: {
-          completed: boolean
-          created_at: string
-          game_id: string
-          id: string
-          round: number
-        }
-        Insert: {
-          completed?: boolean
-          created_at?: string
-          game_id: string
-          id?: string
-          round: number
-        }
-        Update: {
-          completed?: boolean
-          created_at?: string
-          game_id?: string
-          id?: string
-          round?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "guess_who_game_rounds_game_id_fkey"
-            columns: ["game_id"]
-            isOneToOne: false
-            referencedRelation: "guess_who_games"
             referencedColumns: ["id"]
           },
         ]

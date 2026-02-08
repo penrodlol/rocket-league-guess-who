@@ -3,6 +3,7 @@ import { Progress } from '@/components/progress';
 import { Text } from '@/components/text';
 import * as Tooltip from '@/components/tooltip';
 import { GetGameResponse } from '@/functions/supabase.function';
+import { getSupabaseImageURL } from '@/libs/supabase/client';
 
 export type GameLeaderboardProps = { game: GetGameResponse };
 
@@ -29,7 +30,7 @@ export function GameLeaderboard({ game }: GameLeaderboardProps) {
                 value={player.score}
               />
               <img
-                src={player.carImageUrl}
+                src={getSupabaseImageURL('guess_who_cars', player.carImage ?? 'red')}
                 alt={player.carImage ?? 'Car'}
                 aria-hidden="true"
                 style={{ left: `max(0px, calc(${left}% - calc(var(--spacing)*14)))` } as React.CSSProperties}

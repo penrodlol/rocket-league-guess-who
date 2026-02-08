@@ -1,45 +1,47 @@
-import { createContext, use, useCallback, useEffect, useRef, useState } from 'react';
+import { createContext, use, useEffect, useRef, useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 import { Button } from './button';
 
-export type WheelRootProps = React.ComponentProps<'div'> & {
-  items: Array<string>;
+export type WheelRootProps<T> = React.ComponentProps<'div'> & {
+  items: Array<T>;
+  valueAccessor: (item: T) => string;
   onSpinStart?: () => void;
-  onSpinStop?: (winner: string | undefined) => void;
+  onSpinStop?: (winner: T) => void;
 };
 export type WheelItemsProps = React.ComponentProps<'canvas'>;
 export type WheelTriggerProps = React.ComponentProps<typeof Button>;
-export type WheelDrawSliceProps = {
+export type WheelDrawSliceProps<T> = {
   ctx: CanvasRenderingContext2D;
-  item: string;
+  item: T;
   index: number;
   rad: number;
   arc: number;
   total: number;
+  valueAccessor: (item: T) => string;
 };
 
-export type WheelContextValue = {
+export type WheelContextValue<T> = {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
   engineRef: React.RefObject<{ ang: number; angVel: number; friction: number; rAF: number | null }>;
   isSpinning: boolean;
   setIsSpinning: React.Dispatch<React.SetStateAction<boolean>>;
-  winner: string | undefined;
-  setWinner: React.Dispatch<React.SetStateAction<string | undefined>>;
+  winner: T | undefined;
+  setWinner: React.Dispatch<React.SetStateAction<T | undefined>>;
   onSpinStart?: (() => void) | undefined;
 };
 
-export const WheelContext = createContext<WheelContextValue | undefined>(undefined);
+export const WheelContext = createContext<WheelContextValue<unknown> | undefined>(undefined);
 export function useWheel() {
   const context = use(WheelContext);
   if (!context) throw new Error('useWheelContext must be used within a WheelProvider');
   return context;
 }
 
-export function Root({ items, onSpinStart, onSpinStop, ...props }: WheelRootProps) {
+export function Root<T>({ items, valueAccessor, onSpinStart, onSpinStop, ...props }: WheelRootProps<T>) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef({ ang: 0, angVel: 0, friction: 0.995, rAF: null as number | null });
-  const [isSpinning, setIsSpinning] = useState<WheelContextValue['isSpinning']>(false);
-  const [winner, setWinner] = useState<WheelContextValue['winner']>();
+  const [isSpinning, setIsSpinning] = useState<WheelContextValue<unknown>['isSpinning']>(false);
+  const [winner, setWinner] = useState<WheelContextValue<unknown>['winner']>();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -51,7 +53,7 @@ export function Root({ items, onSpinStart, onSpinStop, ...props }: WheelRootProp
     const rad = canvas.width / 2;
 
     const ctx = canvas.getContext('2d');
-    if (ctx) items.forEach((item, index) => drawWheelSlice({ ctx, item, index, rad, arc, total }));
+    if (ctx) items.forEach((item, index) => drawWheelSlice({ ctx, item, index, rad, arc, total, valueAccessor }));
 
     const frame = () => {
       const { angVel, friction } = engineRef.current;
@@ -64,8 +66,10 @@ export function Root({ items, onSpinStart, onSpinStop, ...props }: WheelRootProp
           setIsSpinning(false);
 
           const winner = items[Math.floor(total - (engineRef.current.ang / tau) * total) % total];
-          setWinner(winner);
-          onSpinStop?.(winner);
+          if (winner) {
+            setWinner(winner);
+            onSpinStop?.(winner);
+          }
         }
 
         engineRef.current.ang += engineRef.current.angVel;
@@ -108,22 +112,23 @@ export function Items({ className, ...props }: WheelItemsProps) {
 
 export function Trigger({ onClick, ...props }: WheelTriggerProps) {
   const { engineRef, isSpinning, setIsSpinning, setWinner, onSpinStart } = useWheel();
-  const handleClick = useCallback(
-    (event: React.MouseEvent<HTMLButtonElement>) => {
-      if (isSpinning) return;
-      engineRef.current.angVel = Math.random() * (0.5 - 0.3) + 0.3;
-      onSpinStart?.();
-      setWinner(undefined);
-      setIsSpinning(true);
-      onClick?.(event);
-    },
-    [engineRef, isSpinning, onClick, onSpinStart, setIsSpinning, setWinner],
+  return (
+    <Button
+      isDisabled={isSpinning}
+      onClick={(event) => {
+        if (isSpinning) return;
+        engineRef.current.angVel = Math.random() * (0.5 - 0.3) + 0.3;
+        onSpinStart?.();
+        setWinner(undefined);
+        setIsSpinning(true);
+        onClick?.(event);
+      }}
+      {...props}
+    />
   );
-
-  return <Button disabled={isSpinning} onClick={handleClick} {...props} />;
 }
 
-export function drawWheelSlice({ ctx, item, index, rad, arc }: WheelDrawSliceProps) {
+export function drawWheelSlice<T>({ ctx, item, index, rad, arc, valueAccessor }: WheelDrawSliceProps<T>) {
   const angle = arc * index;
   ctx.save();
 
@@ -144,6 +149,6 @@ export function drawWheelSlice({ ctx, item, index, rad, arc }: WheelDrawSlicePro
   ctx.textAlign = 'center';
   ctx.fillStyle = accent1;
   ctx.font = 'bold 30px sans-serif';
-  ctx.fillText(item, rad * 0.65, 10);
+  ctx.fillText(valueAccessor(item), rad * 0.65, 10);
   ctx.restore();
 }

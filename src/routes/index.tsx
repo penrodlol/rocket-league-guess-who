@@ -5,30 +5,34 @@ import Spinner from '@/components/spinner';
 import { Surface } from '@/components/surface';
 import { Text } from '@/components/text';
 import * as Tooltip from '@/components/tooltip';
-import { createGame, getRoles } from '@/functions/supabase.function';
+import { createGame, getAvailableRoles, GetAvailableRolesResponse } from '@/functions/supabase.function';
+import { getSupabaseImageURL } from '@/libs/supabase/client';
 import { useDiscord } from '@/providers/discord.provider';
 import { useForm } from '@tanstack/react-form';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { CheckIcon } from 'lucide-react';
 import { twJoin, twMerge } from 'tailwind-merge';
 
-type RoleCardProps = Omit<React.ComponentProps<'input'>, 'role'> & { hosting: boolean; role: any };
+type RoleCardProps = Omit<React.ComponentProps<'input'>, 'role'> & {
+  hosting: boolean;
+  role: GetAvailableRolesResponse[number];
+};
 
 export const Route = createFileRoute('/')({
   component: App,
   loader: async () => {
-    const rolesResponse = await getRoles();
-    if (!rolesResponse.success) throw new Error(rolesResponse.error);
-    return rolesResponse.data;
+    const availaibleRolesResponse = await getAvailableRoles();
+    if (!availaibleRolesResponse.success) throw new Error(availaibleRolesResponse.error);
+    return availaibleRolesResponse.data;
   },
 });
 
 function App() {
-  const roles = Route.useLoaderData();
+  const availaibleRoles = Route.useLoaderData();
   const { instanceId, hosting, players } = useDiscord();
   const navigate = useNavigate();
   const form = useForm({
-    defaultValues: { roles: roles.map((role) => role.id) ?? [] },
+    defaultValues: { roles: availaibleRoles.map((role) => role.id) ?? [] },
     onSubmit: async ({ value }) => {
       const response = await createGame({ instanceId, hosting, players, roles: value.roles });
       if (response.success) navigate({ to: '/game', replace: true });
@@ -82,7 +86,7 @@ function App() {
                   aria-describedby="roles-select-description"
                   className="mt-4 grid grid-cols-4 gap-4"
                 >
-                  {roles.map((role) => (
+                  {availaibleRoles.map((role) => (
                     <RoleCard
                       defaultChecked
                       key={role.name}
@@ -153,7 +157,7 @@ export function RoleCard({ className, hosting, role, ...props }: RoleCardProps) 
       )}
       <Surface className="h-40 overflow-hidden py-2">
         <img
-          src={role.imageUrl}
+          src={getSupabaseImageURL('guess_who_roles', `${role.name.toLowerCase()}.png`)}
           alt={role.name}
           aria-hidden="true"
           className="drop-shadow-accent-9/50 aspect-square size-full object-contain drop-shadow-md"

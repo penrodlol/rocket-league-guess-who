@@ -2,6 +2,7 @@ import { Button } from '@/components/button';
 import { Surface } from '@/components/surface';
 import { Text } from '@/components/text';
 import { GetGameResponse } from '@/functions/supabase.function';
+import { getSupabaseImageURL } from '@/libs/supabase/client';
 import { useListData } from 'react-aria-components';
 import { twJoin } from 'tailwind-merge';
 import { GameBoardItem } from './-_game-board-item';
@@ -44,7 +45,7 @@ export function GameBoard({ game }: GameBoardProps) {
             />
             <Surface className="h-40 overflow-hidden py-2">
               <img
-                src={`/roles/${role.name.toLowerCase()}.png`}
+                src={getSupabaseImageURL('guess_who_roles', `${role.name.toLowerCase()}.png`)}
                 alt={role.name}
                 aria-hidden="true"
                 className="drop-shadow-accent-9/50 aspect-square size-full object-contain drop-shadow-md"

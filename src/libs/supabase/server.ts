@@ -1,7 +1,7 @@
 import { Database } from '@/database';
 import { createServerClient } from '@supabase/ssr';
 import { getCookies, setCookie } from '@tanstack/react-start/server';
-import z from 'zod';
+import { z } from 'zod/v4';
 
 const supabaseServerGlobal = globalThis as typeof globalThis & {
   supabase?: ReturnType<typeof createServerClient<Database>>;

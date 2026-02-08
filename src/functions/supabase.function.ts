@@ -1,29 +1,24 @@
 import supabaseClient from '@/libs/supabase/client';
 import supabaseServer from '@/libs/supabase/server';
-import { getImagePathURL } from '@/libs/supabase/shared';
 import { DiscordPlayer } from '@/providers/discord.provider';
 import { createClientOnlyFn, createServerFn } from '@tanstack/react-start';
 
-export const GET_ROLES_ERROR = 'Failure to retrieve roles';
+export const GET_AVAILABLE_ROLES_ERROR = 'Failure to retrieve available roles';
 export const CREATE_GAME_ERROR = 'Failure to create game';
 export const GET_GAME_ERROR = 'Failure to retrieve game';
+export const UPDATE_GAME_PLAYER_ROLE_ERROR = 'Failure to update game player role';
 
-export type GetRolesResponse = NonNullable<Awaited<ReturnType<typeof getRoles>>['data']>;
+export type GetAvailableRolesResponse = NonNullable<Awaited<ReturnType<typeof getAvailableRoles>>['data']>;
 export type GetGameResponse = NonNullable<Awaited<ReturnType<typeof getGame>>['data']>;
 
-export const getRoles = createServerFn({ method: 'POST' }).handler(async () => {
+export const getAvailableRoles = createServerFn({ method: 'POST' }).handler(async () => {
   try {
-    const rolesResponse = await supabaseServer.from('guess_who_roles').select();
-    if (rolesResponse.error) return { success: false, error: GET_ROLES_ERROR };
-
-    const response = rolesResponse.data.map((role) => {
-      const imageUrl = supabaseServer.storage.from('guess_who_roles').getPublicUrl(`${role.name.toLowerCase()}.png`);
-      return { ...role, imageUrl: getImagePathURL(imageUrl.data.publicUrl) };
-    });
-
-    return { success: true, data: response };
+    const response = await supabaseServer.from('guess_who_roles').select();
+    return response.error
+      ? { success: false, error: GET_AVAILABLE_ROLES_ERROR }
+      : { success: true, data: response.data };
   } catch (error) {
-    return { success: false, error: GET_ROLES_ERROR };
+    return { success: false, error: GET_AVAILABLE_ROLES_ERROR };
   }
 });
 
@@ -60,33 +55,52 @@ export const createGame = createClientOnlyFn(
   },
 );
 
-export const getGame = createClientOnlyFn(async (instanceId: string) => {
-  try {
-    const gameResponse = await supabaseClient
-      .from('guess_who_games')
-      .select(
-        `
-        id,
-        discordInstanceId: discord_instance_id,
-        scoreToWin: score_to_win,
-        completed,  
-        roles: guess_who_game_roles (id, role_id, ...guess_who_roles (name, description)),
-        players: guess_who_game_players (id, userId: user_id, username: user_name, avatarUrl: avatar_url, host, carImage: car_image, score)
-      `,
-      )
-      .eq('discord_instance_id', instanceId)
-      .single();
-    if (gameResponse.error) return { success: false, error: GET_GAME_ERROR };
+export const getGame = createServerFn({ method: 'POST' })
+  .inputValidator((discordInstanceId: string) => discordInstanceId)
+  .handler(async ({ data: discordInstanceId }) => {
+    try {
+      const gameResponse = await supabaseClient
+        .from('guess_who_games')
+        .select(
+          `
+            id,
+            scoreToWin: score_to_win,
+            completed,
+            roles: guess_who_game_roles (id, role_id, ...guess_who_roles (name, description)),
+            players: guess_who_game_players (
+              id,
+              userId: user_id,
+              username: user_name,
+              avatarUrl: avatar_url,
+              host,
+              carImage: car_image,
+              score,
+              role: guess_who_game_roles (id, ...guess_who_roles (name, description))
+            )
+          `,
+        )
+        .eq('discord_instance_id', discordInstanceId)
+        .single();
+      return gameResponse.error
+        ? { success: false, error: GET_GAME_ERROR }
+        : { success: true, data: gameResponse.data };
+    } catch (error) {
+      return { success: false, error: GET_GAME_ERROR };
+    }
+  });
 
-    const response = {
-      ...gameResponse.data,
-      players: gameResponse.data.players.map((player) => {
-        const carImageUrl = supabaseClient.storage.from('guess_who_cars').getPublicUrl(player.carImage ?? 'red');
-        return { ...player, carImageUrl: getImagePathURL(carImageUrl.data.publicUrl) };
-      }),
-    };
-    return { success: true, data: response };
+export const updateGamePlayerRole = createClientOnlyFn(async (playerId: string, roleId: string) => {
+  try {
+    const response = await supabaseClient
+      .from('guess_who_game_players')
+      .update({ game_role_id: roleId })
+      .eq('id', playerId)
+      .select('id, roleId: game_role_id')
+      .single();
+    return response.error
+      ? { success: false, error: UPDATE_GAME_PLAYER_ROLE_ERROR }
+      : { success: true, data: response.data };
   } catch (error) {
-    return { success: false, error: GET_GAME_ERROR };
+    return { success: false, error: UPDATE_GAME_PLAYER_ROLE_ERROR };
   }
 });

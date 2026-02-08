@@ -59,9 +59,11 @@ export function DiscordProvider({ children }: { children: React.ReactNode }) {
         const playersResponse = await getDiscordPlayers();
         if (playersResponse.error) throw new Error(playersResponse.error);
 
-        const prefix = import.meta.env.VITE_SUPABASE_DISCORD_PATH;
         const target = import.meta.env.VITE_SUPABASE_URL.replace('https://', '');
-        patchUrlMappings([{ prefix, target }]);
+        patchUrlMappings([
+          { prefix: import.meta.env.VITE_SUPABASE_DISCORD_PATH, target },
+          { prefix: import.meta.env.VITE_SUPABASE_WEBSOCKET_URL, target },
+        ]);
 
         setInstanceId(discord.instanceId);
         setUser(userResponse.data!);
