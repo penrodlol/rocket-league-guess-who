@@ -1,10 +1,9 @@
 import { Button as ButtonPrimitive } from 'react-aria-components';
-import { ClassNameValue } from 'tailwind-merge';
 import { tv, type VariantProps } from 'tailwind-variants';
 import Icon from './icon';
 
 export type ButtonProps = Omit<React.ComponentProps<typeof ButtonPrimitive>, 'children' | 'className'> &
-  ButtonVariants & { children?: React.ReactNode; className?: ClassNameValue; icon?: React.ComponentProps<typeof Icon> };
+  ButtonVariants & { children?: React.ReactNode; className?: string; icon?: React.ComponentProps<typeof Icon> };
 
 export type ButtonVariants = VariantProps<typeof buttonVariants>;
 

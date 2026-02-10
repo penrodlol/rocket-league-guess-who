@@ -1,11 +1,10 @@
 import { Focusable, OverlayArrow, Tooltip, TooltipTrigger } from 'react-aria-components';
-import { ClassNameValue } from 'tailwind-merge';
 import { tv, VariantProps } from 'tailwind-variants';
 
 export type TooltipRootProps = React.ComponentProps<typeof TooltipTrigger>;
 export type TooltipTriggerProps = React.ComponentProps<typeof Focusable>;
 export type TooltipContentProps = Omit<React.ComponentProps<typeof Tooltip>, 'children' | 'className'> &
-  TooltipContentVariants & { children: React.ReactNode; className?: ClassNameValue };
+  TooltipContentVariants & { children: React.ReactNode; className?: string };
 
 export type TooltipContentVariants = VariantProps<typeof tooltipContentVariants>;
 

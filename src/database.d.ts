@@ -77,10 +77,11 @@ export type Database = {
         Row: {
           avatar_url: string
           car_image: string | null
+          completed: boolean | null
           created_at: string
           game_id: string
           game_role_id: string | null
-          host: boolean | null
+          hosting: boolean | null
           id: string
           score: number
           user_id: string
@@ -89,10 +90,11 @@ export type Database = {
         Insert: {
           avatar_url: string
           car_image?: string | null
+          completed?: boolean | null
           created_at?: string
           game_id: string
           game_role_id?: string | null
-          host?: boolean | null
+          hosting?: boolean | null
           id?: string
           score?: number
           user_id: string
@@ -101,10 +103,11 @@ export type Database = {
         Update: {
           avatar_url?: string
           car_image?: string | null
+          completed?: boolean | null
           created_at?: string
           game_id?: string
           game_role_id?: string | null
-          host?: boolean | null
+          hosting?: boolean | null
           id?: string
           score?: number
           user_id?: string

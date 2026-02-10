@@ -1,5 +1,5 @@
 import { Dialog, DialogTrigger, Heading as HeadingPrimitive, Modal, ModalOverlay } from 'react-aria-components';
-import { ClassNameValue, twMerge } from 'tailwind-merge';
+import { twMerge } from 'tailwind-merge';
 import { tv, VariantProps } from 'tailwind-variants';
 import { Button } from './button';
 import { Text, TextVariants } from './text';
@@ -8,7 +8,7 @@ export type DialogRootProps = React.ComponentProps<typeof DialogTrigger>;
 export type DialogContentProps = Omit<React.ComponentProps<typeof ModalOverlay>, 'children' | 'className'> &
   DialogContentVariants & {
     children?: React.ReactNode;
-    className?: ClassNameValue;
+    className?: string;
     dialogProps?: React.ComponentProps<typeof Dialog>;
   };
 export type DialogHeadingProps = React.ComponentProps<typeof HeadingPrimitive> & TextVariants;

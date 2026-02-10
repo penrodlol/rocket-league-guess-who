@@ -7,6 +7,7 @@ export const GET_AVAILABLE_ROLES_ERROR = 'Failure to retrieve available roles';
 export const CREATE_GAME_ERROR = 'Failure to create game';
 export const GET_GAME_ERROR = 'Failure to retrieve game';
 export const UPDATE_GAME_PLAYER_ROLE_ERROR = 'Failure to update game player role';
+export const UPSERT_GAME_PLAYER_GUESSES_ERROR = 'Failure to upsert game player guesses';
 
 export type GetAvailableRolesResponse = NonNullable<Awaited<ReturnType<typeof getAvailableRoles>>['data']>;
 export type GetGameResponse = NonNullable<Awaited<ReturnType<typeof getGame>>['data']>;
@@ -43,7 +44,7 @@ export const createGame = createClientOnlyFn(
           user_id: player.id,
           user_name: player.username,
           avatar_url: player.avatarUrl,
-          host: props.hosting,
+          hosting: props.hosting,
         })),
       );
       if (gamePlayersResponse.error) return { success: false, error: CREATE_GAME_ERROR };
@@ -72,7 +73,7 @@ export const getGame = createServerFn({ method: 'POST' })
               userId: user_id,
               username: user_name,
               avatarUrl: avatar_url,
-              host,
+              hosting,
               carImage: car_image,
               score,
               role: guess_who_game_roles (id, ...guess_who_roles (name, description))
@@ -105,3 +106,35 @@ export const updateGamePlayerRole = createClientOnlyFn(async (playerId: string, 
     return { success: false, error: UPDATE_GAME_PLAYER_ROLE_ERROR };
   }
 });
+
+export const insertGamePlayerGuesses = createClientOnlyFn(
+  async (
+    gameId: string,
+    playerId: string,
+    completed: boolean,
+    guesses: Array<{ playerId: string; roleId: string }>,
+  ) => {
+    try {
+      const gamePlayerResponse = await supabaseClient
+        .from('guess_who_game_players')
+        .update({ completed })
+        .eq('id', playerId)
+        .eq('game_id', gameId);
+      if (gamePlayerResponse.error) return { success: false, error: UPSERT_GAME_PLAYER_GUESSES_ERROR };
+
+      const gameGuessesResponse = await supabaseClient.from('guess_who_game_guesses').insert(
+        guesses.map((guess) => ({
+          game_id: gameId,
+          game_player_id: playerId,
+          target_game_player_id: guess.playerId,
+          guessed_game_role_id: guess.roleId,
+        })),
+      );
+      return gameGuessesResponse.error
+        ? { success: false, error: UPSERT_GAME_PLAYER_GUESSES_ERROR }
+        : { success: true };
+    } catch (error) {
+      return { success: false, error: UPSERT_GAME_PLAYER_GUESSES_ERROR };
+    }
+  },
+);

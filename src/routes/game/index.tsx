@@ -1,10 +1,10 @@
 import { Text } from '@/components/text';
-import { getGame, updateGamePlayerRole } from '@/functions/supabase.function';
+import { getGame, insertGamePlayerGuesses, updateGamePlayerRole } from '@/functions/supabase.function';
 import discord from '@/libs/discord';
 import { useSupabaseRealtimeChannel } from '@/libs/supabase/client';
 import { useDiscord } from '@/providers/discord.provider';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { GameBoard } from './-_game-board';
 import { GameLeaderboard } from './-_game-leaderboard';
 import { GameRoleSpinner } from './-_game-role-spinner';
@@ -22,13 +22,13 @@ function RouteComponent() {
   const game = Route.useLoaderData();
   const navigate = useNavigate();
   const { user } = useDiscord();
-  const [ready, setReady] = useState(game.ready);
   const player = useMemo(() => game.players.find((player) => player.userId === user?.id), [game, user]);
 
   useSupabaseRealtimeChannel<{ ready: boolean }>(`game:${game.id}`, async ({ ready }) => {
-    setReady(ready);
     if (ready) navigate({ to: '/game', replace: true });
   });
+
+  if (!player) return <></>;
 
   return (
     <div className="flex flex-col items-center gap-10">
@@ -36,14 +36,25 @@ function RouteComponent() {
         ROCKET LEAGUE GUESS WHO
       </Text>
       <GameLeaderboard game={game} />
-      {!ready ? (
+      {!game.ready ? (
         <GameRoleSpinner
           game={game}
           player={player}
-          onRoleSelected={(roleId) => updateGamePlayerRole(player?.id!, roleId)}
+          onRoleSelected={(roleId) => updateGamePlayerRole(player.id, roleId)}
         />
       ) : (
-        <GameBoard game={game} />
+        <GameBoard
+          game={game}
+          player={player}
+          onSubmit={({ completed, guesses }) =>
+            insertGamePlayerGuesses(
+              game.id,
+              player.id,
+              completed,
+              guesses.map((guess) => ({ playerId: guess.id, roleId: guess.role.id })),
+            )
+          }
+        />
       )}
     </div>
   );
