@@ -24,9 +24,11 @@ function RouteComponent() {
   const { user } = useDiscord();
   const player = useMemo(() => game.players.find((player) => player.userId === user?.id), [game, user]);
 
-  useSupabaseRealtimeChannel<{ ready: boolean }>(`game:${game.id}`, async ({ ready }) => {
-    if (ready) navigate({ to: '/game', replace: true });
-  });
+  useSupabaseRealtimeChannel<{ ready: boolean }>(
+    `game:${game.id}:players-ready`,
+    ({ ready }) => ready && navigate({ to: '/game', replace: true }),
+    { enabled: !game.ready },
+  );
 
   if (!player) return <></>;
 

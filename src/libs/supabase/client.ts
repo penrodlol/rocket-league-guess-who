@@ -16,13 +16,13 @@ export function getSupabaseImageURL(bucket: string, object: string) {
   return url.replace(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_DISCORD_PATH);
 }
 
-export function useSupabaseRealtimeChannel<T>(channelName: string, callback: (payload: T) => void) {
+export function useSupabaseRealtimeChannel<T>(name: string, callback: (payload: T) => void, { enabled = true } = {}) {
   const channelRef = useRef<ReturnType<NonNullable<typeof supabaseClientGlobal.supabase>['channel']>>(undefined);
 
   useEffect(() => {
-    if (channelRef.current) return;
+    if (!enabled || channelRef.current) return;
 
-    const channel = supabaseClientGlobal.supabase?.channel(channelName, { config: { private: true } });
+    const channel = supabaseClientGlobal.supabase?.channel(name, { config: { private: true } });
     channel?.on('broadcast', { event: '*' }, ({ payload }) => callback((payload ?? {}) as T)).subscribe();
     channelRef.current = channel;
 
@@ -31,5 +31,5 @@ export function useSupabaseRealtimeChannel<T>(channelName: string, callback: (pa
       supabaseClientGlobal.supabase?.removeChannel(channelRef.current);
       channelRef.current = undefined;
     };
-  }, [channelName, callback]);
+  }, [name, callback, enabled]);
 }
