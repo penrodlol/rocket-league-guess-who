@@ -49,7 +49,7 @@ export function GameRoleSpinner({ game, player, onRoleSelected }: GameRoleSpinne
             />
             <Text size="6">{role.description}</Text>
             <Separator className="mt-6 mb-4" />
-            <Text font="display" size="6">
+            <Text font="display" size="6" className="motion-safe:animate-pulse">
               Waiting for other players to select their roles...
             </Text>
           </Dialog.Content>

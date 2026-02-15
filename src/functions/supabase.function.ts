@@ -1,20 +1,33 @@
-import supabaseClient from '@/libs/supabase/client';
-import supabaseServer from '@/libs/supabase/server';
+import supabase from '@/libs/supabase/server';
 import { DiscordPlayer } from '@/providers/discord.provider';
-import { createClientOnlyFn, createServerFn } from '@tanstack/react-start';
+import { createServerFn } from '@tanstack/react-start';
 
 export const GET_AVAILABLE_ROLES_ERROR = 'Failure to retrieve available roles';
-export const CREATE_GAME_ERROR = 'Failure to create game';
 export const GET_GAME_ERROR = 'Failure to retrieve game';
-export const UPDATE_GAME_PLAYER_ROLE_ERROR = 'Failure to update game player role';
-export const UPSERT_GAME_PLAYER_GUESSES_ERROR = 'Failure to upsert game player guesses';
+export const CREATE_GAME_ERROR = 'Failure to create game';
+export const SUBMIT_PLAYER_ROLE_ERROR = 'Failure to submit player role';
+export const SUBMIT_GUESSES_ERROR = 'Failure to submit guesses';
+
+export type CreateGameProps = {
+  instanceId: string;
+  hosting: boolean;
+  players: Array<Pick<DiscordPlayer, 'id' | 'username' | 'avatarUrl'>>;
+  roles: Array<string>;
+};
+export type SubmitPlayerRoleProps = { playerId: string; roleId: string };
+export type SubmitGuessesProps = {
+  gameId: string;
+  playerId: string;
+  completed: boolean;
+  guesses: Array<{ playerId: string; roleId: string }>;
+};
 
 export type GetAvailableRolesResponse = NonNullable<Awaited<ReturnType<typeof getAvailableRoles>>['data']>;
 export type GetGameResponse = NonNullable<Awaited<ReturnType<typeof getGame>>['data']>;
 
 export const getAvailableRoles = createServerFn({ method: 'POST' }).handler(async () => {
   try {
-    const response = await supabaseServer.from('guess_who_roles').select();
+    const response = await supabase.from('guess_who_roles').select();
     return response.error
       ? { success: false, error: GET_AVAILABLE_ROLES_ERROR }
       : { success: true, data: response.data };
@@ -23,51 +36,18 @@ export const getAvailableRoles = createServerFn({ method: 'POST' }).handler(asyn
   }
 });
 
-export const createGame = createClientOnlyFn(
-  async (props: { instanceId: string; hosting: boolean; players: Array<DiscordPlayer>; roles: Array<string> }) => {
-    try {
-      const gameResponse = await supabaseClient
-        .from('guess_who_games')
-        .insert({ discord_instance_id: props.instanceId })
-        .select()
-        .single();
-      if (gameResponse.error) return { success: false, error: CREATE_GAME_ERROR };
-
-      const gameRolesResponse = await supabaseClient
-        .from('guess_who_game_roles')
-        .insert(props.roles.map((role) => ({ game_id: gameResponse.data.id, role_id: role })));
-      if (gameRolesResponse.error) return { success: false, error: CREATE_GAME_ERROR };
-
-      const gamePlayersResponse = await supabaseClient.from('guess_who_game_players').insert(
-        props.players.map((player) => ({
-          game_id: gameResponse.data.id,
-          user_id: player.id,
-          user_name: player.username,
-          avatar_url: player.avatarUrl,
-          hosting: props.hosting,
-        })),
-      );
-      if (gamePlayersResponse.error) return { success: false, error: CREATE_GAME_ERROR };
-
-      return { success: true };
-    } catch (error) {
-      return { success: false, error: CREATE_GAME_ERROR };
-    }
-  },
-);
-
 export const getGame = createServerFn({ method: 'POST' })
   .inputValidator((discordInstanceId: string) => discordInstanceId)
   .handler(async ({ data: discordInstanceId }) => {
     try {
-      const gameResponse = await supabaseClient
+      const response = await supabase
         .from('guess_who_games')
         .select(
           `
             id,
             scoreToWin: score_to_win,
             completed,
-            roles: guess_who_game_roles (id, role_id, ...guess_who_roles (name, description)),
+            roles: guess_who_game_roles (id, role_id, ...guess_who_roles (name, description, special)),
             players: guess_who_game_players (
               id,
               userId: user_id,
@@ -76,65 +56,63 @@ export const getGame = createServerFn({ method: 'POST' })
               hosting,
               carImage: car_image,
               score,
-              role: guess_who_game_roles (id, ...guess_who_roles (name, description))
+              role: guess_who_game_roles (id, ...guess_who_roles (name, description, special))
             )
           `,
         )
         .eq('discord_instance_id', discordInstanceId)
         .single();
-      if (gameResponse.error) return { success: false, error: GET_GAME_ERROR };
+      if (response.error) return { success: false, error: GET_GAME_ERROR };
 
-      const response = {
-        ...gameResponse.data,
-        ready: gameResponse.data.players.every((player) => !!player.role?.id),
-      };
-
-      return { success: true, data: response };
+      const payload = { ...response.data, ready: response.data.players.every((player) => !!player.role?.id) };
+      return { success: true, data: payload };
     } catch (error) {
       return { success: false, error: GET_GAME_ERROR };
     }
   });
 
-export const updateGamePlayerRole = createClientOnlyFn(async (playerId: string, roleId: string) => {
-  try {
-    const response = await supabaseClient
-      .from('guess_who_game_players')
-      .update({ game_role_id: roleId })
-      .eq('id', playerId);
-    return response.error ? { success: false, error: UPDATE_GAME_PLAYER_ROLE_ERROR } : { success: true };
-  } catch (error) {
-    return { success: false, error: UPDATE_GAME_PLAYER_ROLE_ERROR };
-  }
-});
-
-export const insertGamePlayerGuesses = createClientOnlyFn(
-  async (
-    gameId: string,
-    playerId: string,
-    completed: boolean,
-    guesses: Array<{ playerId: string; roleId: string }>,
-  ) => {
+export const createGame = createServerFn({ method: 'POST' })
+  .inputValidator((props: CreateGameProps) => props)
+  .handler(async ({ data: { instanceId, hosting, players, roles } }) => {
     try {
-      const gamePlayerResponse = await supabaseClient
-        .from('guess_who_game_players')
-        .update({ completed })
-        .eq('id', playerId)
-        .eq('game_id', gameId);
-      if (gamePlayerResponse.error) return { success: false, error: UPSERT_GAME_PLAYER_GUESSES_ERROR };
-
-      const gameGuessesResponse = await supabaseClient.from('guess_who_game_guesses').insert(
-        guesses.map((guess) => ({
-          game_id: gameId,
-          game_player_id: playerId,
-          target_game_player_id: guess.playerId,
-          guessed_game_role_id: guess.roleId,
-        })),
-      );
-      return gameGuessesResponse.error
-        ? { success: false, error: UPSERT_GAME_PLAYER_GUESSES_ERROR }
-        : { success: true };
+      const response = await supabase.rpc('guess_who_game_create_fn', {
+        p_discord_instance_id: instanceId,
+        p_hosting: hosting,
+        p_players: players.map((p) => ({ user_id: p.id, user_name: p.username, avatar_url: p.avatarUrl })),
+        p_roles: roles,
+      });
+      return response.error ? { success: false, error: response.error.message } : { success: true };
     } catch (error) {
-      return { success: false, error: UPSERT_GAME_PLAYER_GUESSES_ERROR };
+      return { success: false, error: CREATE_GAME_ERROR };
     }
-  },
-);
+  });
+
+export const submitPlayerRole = createServerFn({ method: 'POST' })
+  .inputValidator((props: SubmitPlayerRoleProps) => props)
+  .handler(async ({ data: { playerId, roleId } }) => {
+    try {
+      const response = await supabase.rpc('guess_who_game_player_submit_role_fn', {
+        p_id: playerId,
+        p_game_role_id: roleId,
+      });
+      return response.error ? { success: false, error: SUBMIT_PLAYER_ROLE_ERROR } : { success: true };
+    } catch (error) {
+      return { success: false, error: SUBMIT_PLAYER_ROLE_ERROR };
+    }
+  });
+
+export const submitPlayerGuesses = createServerFn({ method: 'POST' })
+  .inputValidator((props: SubmitGuessesProps) => props)
+  .handler(async ({ data: { gameId, playerId, completed, guesses } }) => {
+    try {
+      const response = await supabase.rpc('guess_who_game_player_submit_guesses_fn', {
+        p_game_id: gameId,
+        p_player_id: playerId,
+        p_completed: completed,
+        p_guesses: guesses.map((guess) => ({ player_id: guess.playerId, role_id: guess.roleId })),
+      });
+      return response.error ? { success: false, error: response.error.message } : { success: true };
+    } catch (error) {
+      return { success: false, error: SUBMIT_GUESSES_ERROR };
+    }
+  });

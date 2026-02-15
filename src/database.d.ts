@@ -196,18 +196,21 @@ export type Database = {
           description: string
           id: string
           name: string
+          special: boolean
         }
         Insert: {
           created_at?: string
           description: string
           id?: string
           name: string
+          special?: boolean
         }
         Update: {
           created_at?: string
           description?: string
           id?: string
           name?: string
+          special?: boolean
         }
         Relationships: []
       }
@@ -216,24 +219,54 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      count_bucket_objects: {
-        Args: { bucket: string; prefix?: string }
-        Returns: number
-      }
-      guess_who_choose_random_car: {
-        Args: { target_game_id: string }
-        Returns: string
-      }
       guess_who_choose_random_unused_car_debug: {
         Args: { target_game_id: string }
         Returns: string
+      }
+      guess_who_game_choose_player_cars_fn_internal: {
+        Args: { p_count: number; p_target_game_id: string }
+        Returns: string[]
+      }
+      guess_who_game_create_fn: {
+        Args: {
+          p_discord_instance_id: string
+          p_hosting: boolean
+          p_players: Database["public"]["CompositeTypes"]["guess_who_game_create_fn_player_prop"][]
+          p_roles: string[]
+        }
+        Returns: undefined
+      }
+      guess_who_game_player_special_role_handler_fn: {
+        Args: { p_game_id: string; p_role_id: string }
+        Returns: undefined
+      }
+      guess_who_game_player_submit_guesses_fn: {
+        Args: {
+          p_completed: boolean
+          p_game_id: string
+          p_guesses: Database["public"]["CompositeTypes"]["guess_who_game_player_submit_guesses_fn_player_prop"][]
+          p_player_id: string
+        }
+        Returns: undefined
+      }
+      guess_who_game_player_submit_role_fn: {
+        Args: { p_game_role_id: string; p_id: string }
+        Returns: undefined
       }
     }
     Enums: {
       [_ in never]: never
     }
     CompositeTypes: {
-      [_ in never]: never
+      guess_who_game_create_fn_player_prop: {
+        user_id: string | null
+        user_name: string | null
+        avatar_url: string | null
+      }
+      guess_who_game_player_submit_guesses_fn_player_prop: {
+        player_id: string | null
+        role_id: string | null
+      }
     }
   }
 }

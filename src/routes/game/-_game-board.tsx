@@ -1,5 +1,7 @@
 import { Button } from '@/components/button';
+import * as Dialog from '@/components/dialog';
 import * as RadioGroup from '@/components/radio-group';
+import Separator from '@/components/separator';
 import { Surface } from '@/components/surface';
 import { Text } from '@/components/text';
 import { GetGameResponse } from '@/functions/supabase.function';
@@ -12,10 +14,7 @@ import { GameBoardItem } from './-_game-board-item';
 export type GameBoardProps = {
   game: GetGameResponse;
   player: GetGameResponse['players'][number] | undefined;
-  onSubmit: (props: {
-    completed: boolean;
-    guesses: Array<Omit<GameBoardItem, 'role'> & { role: NonNullable<GameBoardItem['role']> }>;
-  }) => void;
+  onSubmit: (props: { completed: boolean; guesses: Array<{ playerId: string; roleId: string }> }) => void;
 };
 export type GameBoardItem = GetGameResponse['players'][number] & { role: GetGameResponse['roles'][number] | null };
 
@@ -27,7 +26,7 @@ export function GameBoard({ game, player, onSubmit }: GameBoardProps) {
   const form = useForm({
     defaultValues: { completed: '' },
     onSubmit: ({ value }) => {
-      const guesses = playersDragAndDropList.items as Parameters<typeof onSubmit>[0]['guesses'];
+      const guesses = playersDragAndDropList.items.map((item) => ({ playerId: item.id, roleId: item.role?.id! }));
       onSubmit({ completed: value.completed === 'yes', guesses });
     },
   });
@@ -42,27 +41,36 @@ export function GameBoard({ game, player, onSubmit }: GameBoardProps) {
             </Text>
             <Text variant="soft">Drag and drop players on to the role cards</Text>
           </div>
-          <form.Field
-            name="completed"
-            children={(field) => (
-              <RadioGroup.Root isRequired onChange={(value) => field.handleChange(value)} onBlur={field.handleBlur}>
-                <RadioGroup.Label>
-                  Completed Successfully?
-                  <Text font="display" size="5" variant="accent">
-                    {player?.role?.name}
-                  </Text>
-                </RadioGroup.Label>
-                <RadioGroup.Items orientation="horizontal" className="justify-end">
-                  <RadioGroup.Item elevation="3" size="5" value="yes">
-                    Yes
-                  </RadioGroup.Item>
-                  <RadioGroup.Item elevation="3" size="5" value="no">
-                    No
-                  </RadioGroup.Item>
-                </RadioGroup.Items>
-              </RadioGroup.Root>
-            )}
-          />
+          {!player?.role?.special ? (
+            <form.Field
+              name="completed"
+              children={(field) => (
+                <RadioGroup.Root isRequired onChange={(value) => field.handleChange(value)} onBlur={field.handleBlur}>
+                  <RadioGroup.Label>
+                    Completed Successfully?
+                    <Text font="display" size="5" variant="accent">
+                      {player?.role?.name}
+                    </Text>
+                  </RadioGroup.Label>
+                  <RadioGroup.Items orientation="horizontal" className="justify-end">
+                    <RadioGroup.Item elevation="3" size="5" value="yes">
+                      Yes
+                    </RadioGroup.Item>
+                    <RadioGroup.Item elevation="3" size="5" value="no">
+                      No
+                    </RadioGroup.Item>
+                  </RadioGroup.Items>
+                </RadioGroup.Root>
+              )}
+            />
+          ) : (
+            <div className="flex flex-col items-end">
+              <Text>Current Role:</Text>
+              <Text font="display" size="6" variant="accent">
+                {player?.role?.name}
+              </Text>
+            </div>
+          )}
         </div>
         <Surface as="section" className="relative min-h-24 select-none">
           <GameBoardItem list={playersDragAndDropList} role={null} className="flex flex-wrap items-center gap-4" />
@@ -104,22 +112,85 @@ export function GameBoard({ game, player, onSubmit }: GameBoardProps) {
             </Surface>
           ))}
         </div>
-
         <form.Subscribe
-          selector={(state) => [state.isPristine, state.isFormValid, state.isSubmitting]}
-          children={([isPristine, isFormValid, isSubmitting]) => {
+          selector={(state) => [
+            state.isPristine,
+            state.isFormValid,
+            state.isSubmitting,
+            state.isSubmitSuccessful,
+            state.values.completed === 'yes',
+          ]}
+          children={([isPristine, isFormValid, isSubmitting, isSubmitSuccessful, completed]) => {
             return (
-              <Button
-                type="submit"
-                font="display"
-                size="4"
-                className="self-end"
-                isDisabled={
-                  isPristine || !isFormValid || isSubmitting || playersDragAndDropList.items.some((item) => !item.role)
-                }
-              >
-                Submit
-              </Button>
+              <>
+                <Button
+                  type="submit"
+                  font="display"
+                  size="4"
+                  className="self-end"
+                  isDisabled={
+                    (!player?.role?.special && (isPristine || !isFormValid || isSubmitting)) ||
+                    playersDragAndDropList.items.some((item) => !item.role)
+                  }
+                >
+                  Submit
+                </Button>
+                {isSubmitSuccessful && (
+                  <Dialog.Root isOpen>
+                    <Dialog.Content className="flex flex-col items-center text-center text-balance">
+                      <img
+                        src={getSupabaseImageURL('guess_who_roles', `${player?.role?.name.toLowerCase()}.png`)}
+                        alt={player?.role?.name}
+                        className={twJoin(
+                          'drop-shadow-accent-9/50 mb-4 aspect-square size-60 self-center object-contain drop-shadow-md',
+                          !completed && 'opacity-50 grayscale',
+                        )}
+                      />
+                      <div className="flex flex-col gap-4">
+                        {!player?.role?.special && (
+                          <>
+                            <Text font="display" size="9" variant={completed ? 'accent' : 'danger'}>
+                              {completed ? 'Mission Success' : 'Mission Failed'}
+                            </Text>
+                            <div className="flex items-center justify-center gap-1.5">
+                              <Text size="6">Points Earned:</Text>
+                              <Text
+                                font="display"
+                                size="6"
+                                variant={completed ? 'accent' : 'soft'}
+                                className="translate-y-px"
+                              >
+                                {completed ? 4 : 0}
+                              </Text>
+                            </div>
+                          </>
+                        )}
+                        <Surface
+                          rounded
+                          elevation="1"
+                          variant="accent-soft-outline"
+                          className="flex flex-col gap-4 px-2 py-4"
+                        >
+                          {!!player?.role?.special && (
+                            <Text weight="6">
+                              Please wait for players to submit their guesses to see if you have succeeded or failed
+                              your role.
+                            </Text>
+                          )}
+                          <Text>
+                            More points can be earned based on the accuracy of your guesses. You will earn 1 point for
+                            each correct guess.
+                          </Text>
+                        </Surface>
+                      </div>
+                      <Separator className="my-4" />
+                      <Text font="display" size="6" className="motion-safe:animate-pulse">
+                        Waiting for other players to make their guesses...
+                      </Text>
+                    </Dialog.Content>
+                  </Dialog.Root>
+                )}
+              </>
             );
           }}
         />

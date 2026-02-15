@@ -6,7 +6,7 @@ import { Surface } from '@/components/surface';
 import { Text } from '@/components/text';
 import * as Tooltip from '@/components/tooltip';
 import { createGame, getAvailableRoles, GetAvailableRolesResponse } from '@/functions/supabase.function';
-import { getSupabaseImageURL } from '@/libs/supabase/client';
+import { getSupabaseImageURL, useSupabaseRealtimeChannels } from '@/libs/supabase/client';
 import { useDiscord } from '@/providers/discord.provider';
 import { useForm } from '@tanstack/react-form';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
@@ -21,23 +21,24 @@ type RoleCardProps = Omit<React.ComponentProps<'input'>, 'role'> & {
 export const Route = createFileRoute('/')({
   component: App,
   loader: async () => {
-    const availaibleRolesResponse = await getAvailableRoles();
-    if (!availaibleRolesResponse.success) throw new Error(availaibleRolesResponse.error);
-    return availaibleRolesResponse.data;
+    const availableRoles = await getAvailableRoles();
+    if (!availableRoles.success) throw new Error(availableRoles.error);
+    return availableRoles.data;
   },
 });
 
 function App() {
-  const availaibleRoles = Route.useLoaderData();
+  const availableRoles = Route.useLoaderData();
   const { instanceId, hosting, players } = useDiscord();
   const navigate = useNavigate();
   const form = useForm({
-    defaultValues: { roles: availaibleRoles.map((role) => role.id) ?? [] },
-    onSubmit: async ({ value }) => {
-      const response = await createGame({ instanceId, hosting, players, roles: value.roles });
-      if (response.success) navigate({ to: '/game', replace: true });
-    },
+    defaultValues: { roles: availableRoles.map((role) => role.id) ?? [] },
+    onSubmit: ({ value }) => createGame({ data: { instanceId, hosting, players, roles: value.roles } }),
   });
+
+  useSupabaseRealtimeChannels([
+    { name: `game:${instanceId}:ready`, callback: () => navigate({ to: '/game', replace: true }) },
+  ]);
 
   return (
     <div className="flex flex-col items-center gap-10">
@@ -86,7 +87,7 @@ function App() {
                   aria-describedby="roles-select-description"
                   className="mt-4 grid grid-cols-4 gap-4"
                 >
-                  {availaibleRoles.map((role) => (
+                  {availableRoles.map((role) => (
                     <RoleCard
                       defaultChecked
                       key={role.name}
