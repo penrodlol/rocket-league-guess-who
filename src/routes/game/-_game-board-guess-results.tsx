@@ -55,7 +55,7 @@ export function GameBoardGuessResults({
                   <Table.Row key={player.id}>
                     <Table.Head className="bg-gray-3 elevation-3 w-48">Player</Table.Head>
                     <Table.Head className="bg-gray-3 elevation-3 w-48">Role</Table.Head>
-                    {[...player.guesses, ...player.guesses, ...player.guesses, ...player.guesses, ...player.guesses]
+                    {player.guesses
                       .sort((a, b) => a.player.userId.localeCompare(b.player.userId))
                       .map((guess) => (
                         <Table.Head key={guess.id}>{guess.player.username}</Table.Head>
@@ -66,7 +66,7 @@ export function GameBoardGuessResults({
               })}
           </Table.Header>
           <Table.Body>
-            {[...playersGuesses, ...playersGuesses, ...playersGuesses, ...playersGuesses, ...playersGuesses]
+            {playersGuesses
               .sort((a, b) => a.userId.localeCompare(b.userId))
               .map((player) => {
                 return (
@@ -85,7 +85,7 @@ export function GameBoardGuessResults({
                         </Text>
                       </div>
                     </Table.Cell>
-                    {[...player.guesses, ...player.guesses, ...player.guesses, ...player.guesses, ...player.guesses]
+                    {player.guesses
                       .sort((a, b) => a.player.userId.localeCompare(b.player.userId))
                       .map((guess) => (
                         <Table.Cell key={guess.id}>
