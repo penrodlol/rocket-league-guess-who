@@ -27,7 +27,7 @@ export const avatarVariants = tv({
 });
 
 export function Avatar({ className, elevation, size, variant, ...props }: AvatarProps) {
-  const variants = avatarVariants({ size, variant });
+  const variants = avatarVariants({ elevation, size, variant });
   return (
     <div className={variants.base({ className })}>
       <img className={variants.image()} {...props} />

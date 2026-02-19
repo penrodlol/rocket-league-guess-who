@@ -11,7 +11,7 @@ export const buttonVariants = tv({
   base: [
     'inline-flex shrink-0 items-center justify-center gap-2 rounded font-medium whitespace-nowrap select-none',
     'disabled:pointer-events-none disabled:opacity-50 ',
-    'focus:ring-accent-8 focus:ring-2 focus:outline-none',
+    'focus-visible:ring-accent-8 focus-visible:ring-2 focus-visible:outline-none',
     'motion-safe:pressed:scale-[0.97] motion-safe:transition-all',
   ],
   defaultVariants: { size: '2', variant: 'accent-solid' },

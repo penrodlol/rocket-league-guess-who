@@ -30,7 +30,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       lang="en"
       className={twJoin(
         'selection:bg-accent-3 min-h-svh w-full bg-[url("/background.png")] bg-cover bg-fixed bg-center antialiased',
-        '[scrollbar-color:var(--color-gray-3)_transparent] [scrollbar-gutter:stable]',
+        '[&::-webkit-scrollbar]:hidden',
       )}
     >
       <head>
