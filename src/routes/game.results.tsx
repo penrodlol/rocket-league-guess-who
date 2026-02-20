@@ -3,24 +3,36 @@ import { Button } from '@/components/button';
 import { Surface } from '@/components/surface';
 import * as Table from '@/components/table';
 import { Text } from '@/components/text';
-import { GetGamePlayersGuessesResponse, GetGameResponse } from '@/functions/supabase.function';
+import { getGame, getGamePlayersGuesses, submitGameNextRound } from '@/functions/supabase.function';
+import discord from '@/libs/discord';
 import { getSupabaseImageURL } from '@/libs/supabase/client';
+import { useDiscord } from '@/providers/discord.provider';
+import { useMutation } from '@tanstack/react-query';
+import { createFileRoute } from '@tanstack/react-router';
+import { useServerFn } from '@tanstack/react-start';
+import { useMemo } from 'react';
 
-export type GameBoardGuessResultsProps = {
-  hosting: boolean;
-  completed: boolean;
-  roles: GetGameResponse['roles'];
-  playersGuesses: GetGamePlayersGuessesResponse;
-  onNextRound: () => void;
-};
+export const Route = createFileRoute('/game/results')({
+  component: RouteComponent,
+  loader: async () => {
+    const gameResponse = await getGame({ data: discord.instanceId });
+    if (!gameResponse.success) throw new Error(gameResponse.error);
 
-export function GameBoardGuessResults({
-  hosting,
-  completed,
-  roles,
-  playersGuesses,
-  onNextRound,
-}: GameBoardGuessResultsProps) {
+    const gamePlayersGuessesResponse = await getGamePlayersGuesses({ data: gameResponse.data.id });
+    if (!gamePlayersGuessesResponse.success) throw new Error(gamePlayersGuessesResponse.error);
+
+    return { game: gameResponse.data, gamePlayersGuesses: gamePlayersGuessesResponse.data };
+  },
+});
+
+function RouteComponent() {
+  const { game, gamePlayersGuesses } = Route.useLoaderData();
+  const { user } = useDiscord();
+  const player = useMemo(() => game.players.find((player) => player.userId === user?.id), [game, user]);
+
+  const submitGameNextRoundFn = useServerFn(submitGameNextRound);
+  const submitGameNextRoundFnMutation = useMutation({ mutationFn: submitGameNextRoundFn });
+
   return (
     <>
       <Surface rounded variant="gray-soft-outline" className="flex w-full flex-col gap-12 px-6 py-4">
@@ -48,7 +60,7 @@ export function GameBoardGuessResults({
         </div>
         <Table.Root rounded elevation="3" variant="gray-solid-outline">
           <Table.Header>
-            {playersGuesses
+            {gamePlayersGuesses
               .sort((a, b) => a.userId.localeCompare(b.userId))
               .map((player) => {
                 return (
@@ -66,7 +78,7 @@ export function GameBoardGuessResults({
               })}
           </Table.Header>
           <Table.Body>
-            {playersGuesses
+            {gamePlayersGuesses
               .sort((a, b) => a.userId.localeCompare(b.userId))
               .map((player) => {
                 return (
@@ -103,9 +115,14 @@ export function GameBoardGuessResults({
               })}
           </Table.Body>
         </Table.Root>
-        {!completed &&
-          (hosting ? (
-            <Button font="display" size="4" className="self-end" onClick={onNextRound}>
+        {!game.completed &&
+          (player?.hosting ? (
+            <Button
+              font="display"
+              size="4"
+              className="self-end"
+              onClick={() => submitGameNextRoundFnMutation.mutate({ data: game.id })}
+            >
               Next Round
             </Button>
           ) : (
@@ -115,7 +132,7 @@ export function GameBoardGuessResults({
           ))}
       </Surface>
       <ul className="grid grid-cols-4 gap-4">
-        {roles.map((role) => (
+        {game.roles.map((role) => (
           <Surface
             key={role.id}
             as="li"

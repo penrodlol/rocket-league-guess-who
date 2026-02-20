@@ -9,7 +9,7 @@ import { createGame, getAvailableRoles, GetAvailableRolesResponse } from '@/func
 import { getSupabaseImageURL, useSupabaseRealtimeChannels } from '@/libs/supabase/client';
 import { useDiscord } from '@/providers/discord.provider';
 import { useForm } from '@tanstack/react-form';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { CheckIcon } from 'lucide-react';
 import { twJoin, twMerge } from 'tailwind-merge';
 
@@ -29,15 +29,15 @@ export const Route = createFileRoute('/')({
 
 function App() {
   const availableRoles = Route.useLoaderData();
+  const navigate = Route.useNavigate();
   const { instanceId, hosting, players } = useDiscord();
-  const navigate = useNavigate();
   const form = useForm({
     defaultValues: { roles: availableRoles.map((role) => role.id) ?? [] },
     onSubmit: ({ value }) => createGame({ data: { instanceId, hosting, players, roles: value.roles } }),
   });
 
   useSupabaseRealtimeChannels([
-    { name: `game:${instanceId}:ready`, callback: () => navigate({ to: '/game', replace: true }) },
+    { name: `game:${instanceId}:ready`, callback: () => navigate({ to: '/game/spinner', replace: true }) },
   ]);
 
   return (

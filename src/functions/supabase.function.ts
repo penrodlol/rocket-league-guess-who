@@ -8,6 +8,7 @@ export const GET_GAME_PLAYERS_GUESSES_ERROR = 'Failure to retrieve game players 
 export const CREATE_GAME_ERROR = 'Failure to create game';
 export const SUBMIT_PLAYER_ROLE_ERROR = 'Failure to submit player role';
 export const SUBMIT_GUESSES_ERROR = 'Failure to submit guesses';
+export const SUBMIT_GAME_NEXT_ROUND_ERROR = 'Failure to submit next round';
 
 export type CreateGameProps = {
   instanceId: string;
@@ -66,7 +67,7 @@ export const getGame = createServerFn({ method: 'POST' })
         .single();
       if (response.error) return { success: false, error: GET_GAME_ERROR };
 
-      const payload = { ...response.data, ready: response.data.players.every((player) => !!player.role?.id) };
+      const payload = { ...response.data, playersReady: response.data.players.every((player) => !!player.role?.id) };
       return { success: true, data: payload };
     } catch (error) {
       return { success: false, error: GET_GAME_ERROR };
@@ -152,5 +153,16 @@ export const submitPlayerGuesses = createServerFn({ method: 'POST' })
       return response.error ? { success: false, error: SUBMIT_GUESSES_ERROR } : { success: true };
     } catch (error) {
       return { success: false, error: SUBMIT_GUESSES_ERROR };
+    }
+  });
+
+export const submitGameNextRound = createServerFn({ method: 'POST' })
+  .inputValidator((gameId: string) => gameId)
+  .handler(async ({ data: gameId }) => {
+    try {
+      const response = await supabase.rpc('guess_who_game_submit_next_round_fn', { p_game_id: gameId });
+      return response.error ? { success: false, error: SUBMIT_GAME_NEXT_ROUND_ERROR } : { success: true };
+    } catch (error) {
+      return { success: false, error: SUBMIT_GAME_NEXT_ROUND_ERROR };
     }
   });

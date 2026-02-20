@@ -3,18 +3,32 @@ import Separator from '@/components/separator';
 import { Surface } from '@/components/surface';
 import { Text } from '@/components/text';
 import * as Wheel from '@/components/wheel';
-import { GetGameResponse } from '@/functions/supabase.function';
+import { getGame, submitPlayerRole } from '@/functions/supabase.function';
+import discord from '@/libs/discord';
 import { getSupabaseImageURL } from '@/libs/supabase/client';
-import { useState } from 'react';
+import { useDiscord } from '@/providers/discord.provider';
+import { useMutation } from '@tanstack/react-query';
+import { createFileRoute } from '@tanstack/react-router';
+import { useServerFn } from '@tanstack/react-start';
+import { useMemo, useState } from 'react';
 
-export type GameRoleSpinnerProps = {
-  game: GetGameResponse;
-  player: GetGameResponse['players'][0] | undefined;
-  onRoleSelected: (role: GetGameResponse['roles'][0]['id']) => void;
-};
+export const Route = createFileRoute('/game/spinner')({
+  component: RouteComponent,
+  loader: async () => {
+    const response = await getGame({ data: discord.instanceId });
+    if (!response.success) throw new Error(response.error);
+    return response.data;
+  },
+});
 
-export function GameRoleSpinner({ game, player, onRoleSelected }: GameRoleSpinnerProps) {
+function RouteComponent() {
+  const game = Route.useLoaderData();
+  const { user } = useDiscord();
+  const player = useMemo(() => game.players.find((player) => player.userId === user?.id), [game, user]);
   const [role, setRole] = useState<NonNullable<typeof player>['role'] | undefined>(player?.role);
+
+  const submitPlayerRoleFn = useServerFn(submitPlayerRole);
+  const submitPlayerRoleFnMutation = useMutation({ mutationFn: submitPlayerRoleFn });
 
   return (
     <Surface rounded elevation="3" variant="gray-soft-outline" className="flex w-full flex-col gap-10 px-6 pt-4 pb-10">
@@ -29,9 +43,9 @@ export function GameRoleSpinner({ game, player, onRoleSelected }: GameRoleSpinne
         items={game.roles}
         valueAccessor={(item) => item.name}
         onSpinStop={async (item) => {
+          if (!player) return;
           setRole(item);
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-          onRoleSelected(item.id);
+          submitPlayerRoleFnMutation.mutate({ data: { playerId: player.id, roleId: item.id } });
         }}
       >
         <Wheel.Items />

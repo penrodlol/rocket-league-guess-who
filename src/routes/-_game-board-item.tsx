@@ -5,7 +5,7 @@ import { Text } from '@/components/text';
 import { GripIcon } from 'lucide-react';
 import { GridList, GridListItem, isTextDropItem, ListData, useDragAndDrop } from 'react-aria-components';
 import { ClassNameValue, twMerge } from 'tailwind-merge';
-import { type GameBoardItem } from './-_game-board';
+import { type GameBoardItem } from './game.board';
 
 export type GameBoardItemProps = {
   list: ListData<GameBoardItem>;

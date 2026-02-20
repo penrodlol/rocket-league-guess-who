@@ -4,30 +4,49 @@ import * as RadioGroup from '@/components/radio-group';
 import Separator from '@/components/separator';
 import { Surface } from '@/components/surface';
 import { Text } from '@/components/text';
-import { GetGameResponse } from '@/functions/supabase.function';
+import { getGame, GetGameResponse, submitPlayerGuesses } from '@/functions/supabase.function';
+import discord from '@/libs/discord';
 import { getSupabaseImageURL } from '@/libs/supabase/client';
+import { useDiscord } from '@/providers/discord.provider';
 import { useForm } from '@tanstack/react-form';
+import { useMutation } from '@tanstack/react-query';
+import { createFileRoute } from '@tanstack/react-router';
+import { useServerFn } from '@tanstack/react-start';
+import { useMemo } from 'react';
 import { useListData } from 'react-aria-components';
 import { twJoin } from 'tailwind-merge';
 import { GameBoardItem } from './-_game-board-item';
 
-export type GameBoardProps = {
-  game: GetGameResponse;
-  player: GetGameResponse['players'][number] | undefined;
-  onSubmit: (props: { completed: boolean; guesses: Array<{ playerId: string; roleId: string }> }) => void;
-};
 export type GameBoardItem = GetGameResponse['players'][number] & { role: GetGameResponse['roles'][number] | null };
 
-export function GameBoard({ game, player, onSubmit }: GameBoardProps) {
+export const Route = createFileRoute('/game/board')({
+  component: RouteComponent,
+  loader: async () => {
+    const response = await getGame({ data: discord.instanceId });
+    if (!response.success) throw new Error(response.error);
+    return response.data;
+  },
+});
+
+function RouteComponent() {
+  const game = Route.useLoaderData();
+  const { user } = useDiscord();
+  const player = useMemo(() => game.players.find((player) => player.userId === user?.id), [game, user]);
+
+  const submitPlayerGuessesFn = useServerFn(submitPlayerGuesses);
+  const submitPlayerGuessesFnMutation = useMutation({ mutationFn: submitPlayerGuessesFn });
+
   const playersDragAndDropList = useListData<GameBoardItem>({
     initialItems: game.players.map((player) => ({ ...player, role: null })),
   });
 
   const form = useForm({
     defaultValues: { completed: '' },
-    onSubmit: ({ value }) => {
+    onSubmit: async ({ value }) => {
+      if (!player) return;
+      const completed = value.completed === 'yes';
       const guesses = playersDragAndDropList.items.map((item) => ({ playerId: item.id, roleId: item.role?.id! }));
-      onSubmit({ completed: value.completed === 'yes', guesses });
+      submitPlayerGuessesFnMutation.mutate({ data: { gameId: game.id, playerId: player.id, completed, guesses } });
     },
   });
 

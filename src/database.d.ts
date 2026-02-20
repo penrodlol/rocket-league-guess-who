@@ -253,6 +253,10 @@ export type Database = {
         Args: { p_game_role_id: string; p_id: string }
         Returns: undefined
       }
+      guess_who_game_submit_next_round_fn: {
+        Args: { p_game_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
